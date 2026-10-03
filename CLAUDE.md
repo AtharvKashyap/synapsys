@@ -41,8 +41,10 @@ macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applie
 ## Layout
 `src/synapsys_decoder/`: `config.py`, `types.py` (Trial, ClassificationResult, REJECT),
 `references.py`, `cca.py`, `classifier.py`, `preprocessing.py`, `synthetic.py`,
-`metrics.py`, `plotting.py`, `io/{benchmark,csv_eeg}.py`. Docs in `docs/algorithm.md`,
+`metrics.py`, `plotting.py`, `pipeline.py` (decode_trial: select→filter epoch→crop→classify), `runlog.py` (results/<run_id>/ artifacts), `io/{benchmark,csv_eeg}.py`.
+Scripts: `run_synthetic_validation.py` (M6), `run_benchmark_validation.py` (M7–M8), `analyze_recording.py` (own CSV recordings).
+`docs/figures/synthetic/` = committed copy of a synthetic run made from a clean tree; regenerate + recopy if algorithm code changes. Docs in `docs/algorithm.md`,
 `docs/validation.md`.
 
 ## Milestone status
-See README "Status". Scope agreed so far: Python milestones M1–M8; ESP32 port (M9+) deferred.
+See README "Status" (M1–M6 done; M7–M8 code ready, awaiting Wang Benchmark download — user to decide how many subjects). Scope agreed so far: Python milestones M1–M8; ESP32 port (M9+) deferred.

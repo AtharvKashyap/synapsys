@@ -119,7 +119,7 @@ tests/                   pytest suite, one file per module plus script smoke tes
 
 ## Headline synthetic results
 
-Source: `docs/figures/synthetic/run.json` (run `20261003-231156_synthetic_validation`, seed 20261003, 40 trials per class = 120 trials per condition, 6 s epochs, decoder uses the last 2.5 s, `configs/synapsys.yaml`, no gating).
+Source: `docs/figures/synthetic/run.json` (run `20261003-231518_synthetic_validation`, seed 20261003, 40 trials per class = 120 trials per condition, 6 s epochs, decoder uses the last 2.5 s, `configs/synapsys.yaml`, no gating).
 
 **These are pipeline-behaviour checks on synthetic signals. They are NOT human EEG performance and say nothing about whether SynapSys meets 85 %.**
 

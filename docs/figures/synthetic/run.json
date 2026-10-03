@@ -1,5 +1,5 @@
 {
-  "run_id": "20261003-231156_synthetic_validation",
+  "run_id": "20261003-231518_synthetic_validation",
   "command": [
     "scripts/run_synthetic_validation.py"
   ],
@@ -9,7 +9,7 @@
     "numpy": "2.5.3",
     "scipy": "1.18.1",
     "matplotlib": "3.11.2",
-    "git_revision": "041287dcd0c535e24ae2e72e3181bf4620a43c4b-dirty"
+    "git_revision": "88d2d5cf74eb3acfbab91707b6473900ffb13b15"
   },
   "metrics": {
     "disclaimer": "Synthetic pipeline-behaviour validation only; not human EEG performance.",

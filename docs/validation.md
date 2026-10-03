@@ -41,7 +41,7 @@ Disclaimer: synthetic signals do not model human EEG. These runs check pipeline 
 
 SNR_dB = 10 log10(P_signal / P_noise), where P_signal is the mean of x^2 over all channels and samples of the noise-free SSVEP component and P_noise is the white-noise variance. This is a **broadband** ratio: the noise is spread over 0-125 Hz, so the noise inside the ~1 Hz band around a target (and around a CCA reference) is far smaller. For fs = 250 Hz and 1 Hz resolution, narrowband SNR is roughly broadband SNR + 10 log10(125), about **+21 dB**. A broadband -20 dB corresponds to roughly +1 dB in the band of interest. Real EEG noise is coloured (1/f, alpha, artefacts), so these numbers do not transfer.
 
-### Results (`docs/figures/synthetic/run.json`, run `20261003-231156_synthetic_validation`)
+### Results (`docs/figures/synthetic/run.json`, run `20261003-231518_synthetic_validation`)
 
 Clean synthetic trials, causal: 120/120 correct (accuracy 1.0, rejection rate 0, all scores finite; `n_nonfinite_scores` = 0).
 

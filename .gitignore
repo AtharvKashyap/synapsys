@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Raw EEG never goes in git (size + licensing). Keep only READMEs/placeholders.
+data/*
+!data/README.md
+!data/.gitkeep
+
+# Generated run outputs; commit selected figures deliberately via `git add -f`.
+results/*
+!results/.gitkeep

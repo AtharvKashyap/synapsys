@@ -1,0 +1,28 @@
+# SynapSys project decoder configuration (own hardware).
+# Thresholds are intentionally null: they must be calibrated on own-system
+# development data (see docs/validation.md), never invented.
+sample_rate_hz: 250
+channels: [O1, Oz, O2, POz]
+
+# Order here defines class order everywhere (scores, confusion matrices).
+# Labels MUST be quoted: YAML 1.1 parses bare YES/NO as booleans.
+targets:
+  "YES": 8.5714285714   # 60 Hz / 7 frames
+  "NO": 12.0            # 60 Hz / 5 frames
+  "HELP": 15.0          # 60 Hz / 4 frames
+
+window_seconds: 2.5
+harmonics: 2
+
+preprocessing:
+  remove_dc: true
+  bandpass_low_hz: 0.5
+  bandpass_high_hz: 45.0
+  bandpass_order: 4        # Butterworth prototype order (SOS); bandpass => 2x poles
+  notch_hz: 60.0           # null disables
+  notch_q: 30.0
+  mode: causal             # causal (portable to ESP32) | zero_phase (offline only)
+
+decision:
+  confidence_threshold: null
+  margin_threshold: null

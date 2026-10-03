@@ -1,0 +1,39 @@
+# Wang et al. (2017) Tsinghua SSVEP Benchmark validation configuration.
+# Validates the GENERIC CCA implementation on frequencies that exist in the
+# dataset. These are NOT SynapSys YES/NO/HELP trials and must not be relabelled.
+sample_rate_hz: 250
+channels: [O1, Oz, O2, POz]
+
+targets:
+  F8_0: 8.0
+  F12_0: 12.0
+  F15_0: 15.0
+
+window_seconds: 2.5
+harmonics: 2
+
+preprocessing:
+  remove_dc: true
+  bandpass_low_hz: 0.5
+  bandpass_high_hz: 45.0
+  bandpass_order: 4
+  # Recorded in China (50 Hz mains); dataset distribution already notch-filtered
+  # at 50 Hz. A 60 Hz notch is irrelevant here, so it is disabled.
+  notch_hz: null
+  notch_q: 30.0
+  mode: causal
+
+decision:
+  confidence_threshold: null
+  margin_threshold: null
+
+# Dataset-specific epoching (consumed by io/benchmark.py and scripts, never by
+# the classifier). Stimulus onset is 0.5 s into each 6 s epoch; the visual
+# latency offset follows the dataset paper's convention.
+benchmark:
+  subjects: [1]
+  stimulus_onset_s: 0.5
+  visual_latency_s: 0.14
+  window_sweep_s: [1.0, 1.5, 2.0, 2.5, 3.0]
+  harmonics_sweep: [1, 2, 3]
+  extended_channels: [Pz, PO5, PO3, POz, PO4, PO6, O1, Oz, O2]

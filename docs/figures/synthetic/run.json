@@ -1,0 +1,175 @@
+{
+  "run_id": "20261003-231156_synthetic_validation",
+  "command": [
+    "scripts/run_synthetic_validation.py"
+  ],
+  "environment": {
+    "python": "3.13.1",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "git_revision": "041287dcd0c535e24ae2e72e3181bf4620a43c4b-dirty"
+  },
+  "metrics": {
+    "disclaimer": "Synthetic pipeline-behaviour validation only; not human EEG performance.",
+    "seed": 20261003,
+    "trials_per_class": 40,
+    "epoch_seconds": 6.0,
+    "snr_definition": "broadband: mean signal power / white-noise variance (drift and line noise added on top, not counted)",
+    "drift_amplitude_v": 2e-05,
+    "line_amplitude_v": 5e-06,
+    "clean": {
+      "n_trials": 120,
+      "labels": [
+        "YES",
+        "NO",
+        "HELP"
+      ],
+      "accuracy": 1.0,
+      "accepted_accuracy": 1.0,
+      "rejection_rate": 0.0,
+      "per_class_accuracy": {
+        "YES": 1.0,
+        "NO": 1.0,
+        "HELP": 1.0
+      },
+      "confusion_matrix": [
+        [
+          40,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          40,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          40,
+          0
+        ]
+      ],
+      "confusion_columns": [
+        "YES",
+        "NO",
+        "HELP",
+        "REJECT"
+      ]
+    },
+    "snr_sweep_db": [
+      0,
+      -5,
+      -10,
+      -15,
+      -20,
+      -25,
+      -30
+    ],
+    "accuracy_vs_snr": {
+      "causal": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.9583333333333334,
+        0.675,
+        0.4666666666666667
+      ],
+      "zero_phase": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.95,
+        0.65,
+        0.49166666666666664
+      ],
+      "none": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.8583333333333333,
+        0.6416666666666667,
+        0.4083333333333333
+      ]
+    },
+    "confusion_causal_snr-20": [
+      [
+        39,
+        0,
+        1
+      ],
+      [
+        1,
+        38,
+        1
+      ],
+      [
+        1,
+        1,
+        38
+      ]
+    ],
+    "rejection_mechanics": {
+      "target": {
+        "n": 120,
+        "confidence_median": 0.31522797013109394,
+        "confidence_p10_p90": [
+          0.25540765095340767,
+          0.37633751915271146
+        ],
+        "margin_median": 0.09052561584192796,
+        "margin_p10_p90": [
+          0.021172874374446864,
+          0.16913944678457363
+        ]
+      },
+      "pure noise": {
+        "n": 40,
+        "confidence_median": 0.2207556066967422,
+        "confidence_p10_p90": [
+          0.19876779547122317,
+          0.2797228462877463
+        ],
+        "margin_median": 0.022747432744876145,
+        "margin_p10_p90": [
+          0.0044772647097429735,
+          0.05678190419765947
+        ]
+      },
+      "off-target": {
+        "n": 40,
+        "confidence_median": 0.2471872257806726,
+        "confidence_p10_p90": [
+          0.2036540966659309,
+          0.27172907687837367
+        ],
+        "margin_median": 0.045257584896880004,
+        "margin_p10_p90": [
+          0.009536066246296519,
+          0.0707022731383512
+        ]
+      },
+      "ambiguous mixture": {
+        "n": 40,
+        "confidence_median": 0.3007290188435445,
+        "confidence_p10_p90": [
+          0.25130820611574867,
+          0.3575197030499187
+        ],
+        "margin_median": 0.037518995013938794,
+        "margin_p10_p90": [
+          0.01449543980681364,
+          0.09797221509964438
+        ]
+      }
+    },
+    "n_nonfinite_scores": 0
+  }
+}

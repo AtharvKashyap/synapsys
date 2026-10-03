@@ -13,6 +13,7 @@ Sibling repo `../synapsys-stimulus` is the PsychoPy stimulus renderer — keep t
 .venv/bin/python scripts/run_synthetic_validation.py      # M6 artifacts -> results/
 .venv/bin/python scripts/run_benchmark_validation.py      # M7/M8, needs data/benchmark/
 ```
+macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applies the `hidden` flag to files in dot-dirs; Python 3.13 then skips the editable-install `.pth` (`ModuleNotFoundError: synapsys_decoder`). So the venv lives at `~/.venvs/synapsys-decoder` and `.venv` is a symlink to it (recreate: `python3 -m venv ~/.venvs/synapsys-decoder && ln -s ~/.venvs/synapsys-decoder .venv`). pytest also sets `pythonpath = ["src"]`.
 
 ## Project constants (live in configs/, never hard-code in algorithm modules)
 - Targets: YES 60/7≈8.571 Hz, NO 12 Hz, HELP 15 Hz (60 Hz display; 7/5/4 frames/cycle)

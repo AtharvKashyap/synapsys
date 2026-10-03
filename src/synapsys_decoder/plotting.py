@@ -275,7 +275,7 @@ def plot_score_distributions(
     title: str = "CCA score distributions",
     ax: Axes | None = None,
 ) -> Figure:
-    """Box + strip plot: x groups = true label, one box per scoring class.
+    """Box + strip plot: x groups = trial group (e.g. true label), one box per scoring class.
 
     ``scores_by_true_label[true][scored_class]`` is a list of scores for trials
     whose true class is ``true``. Strip jitter is deterministic (no RNG).
@@ -311,7 +311,7 @@ def plot_score_distributions(
             ax.scatter(
                 pos + jit, vals, s=10, color=color, edgecolor="white", linewidth=0.4, zorder=3
             )
-    ax.set_xticks(range(len(groups)), [f"true: {g}" for g in groups])
+    ax.set_xticks(range(len(groups)), [g.replace(" ", "\n", 1) for g in groups], fontsize=9)
     ax.set_ylabel("Max canonical correlation")
     ax.set_title(title, fontsize=11)
     ax.legend(
@@ -325,4 +325,36 @@ def plot_score_distributions(
         fontsize=8,
     )
     _style(ax)
+    return fig
+
+
+def plot_gating_scatter(
+    points_by_kind: Mapping[str, tuple[Sequence[float], Sequence[float]]],
+    *,
+    title: str = "Winner score vs margin",
+    ax: Axes | None = None,
+) -> Figure:
+    """Scatter of (winner score, winner - runner-up margin) per trial kind.
+
+    Used to inspect rejection mechanics: genuine target trials should sit
+    up-and-right of noise / off-target / ambiguous trials. Draws no thresholds —
+    thresholds are calibrated on own-system data, never chosen from this plot.
+    """
+    fig, ax = _get_ax(ax, (6, 4.5))
+    for i, (kind, (conf, margin)) in enumerate(points_by_kind.items()):
+        ax.scatter(
+            conf,
+            margin,
+            s=14,
+            alpha=0.6,
+            color=PALETTE[i % len(PALETTE)],
+            edgecolors="none",
+            label=kind,
+        )
+    ax.set_xlabel("Winner CCA score (confidence)")
+    ax.set_ylabel("Margin (winner − runner-up)")
+    ax.set_title(title, fontsize=11)
+    if len(points_by_kind) >= 2:
+        ax.legend(frameon=False, fontsize=9)
+    _style(ax, grid_axis="both")
     return fig

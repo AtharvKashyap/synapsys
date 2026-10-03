@@ -358,3 +358,99 @@ def plot_gating_scatter(
         ax.legend(frameon=False, fontsize=9)
     _style(ax, grid_axis="both")
     return fig
+
+
+def plot_filter_response(
+    freqs_hz: Sequence[float],
+    response_db: Mapping[str, Sequence[float]],
+    *,
+    keep_frequencies: Mapping[str, float] | None = None,
+    reject_frequencies: Mapping[str, float] | None = None,
+    ylim_db: tuple[float, float] = (-80.0, 5.0),
+    log_freq: bool = False,
+    title: str = "Filter magnitude response",
+    ax: Axes | None = None,
+) -> Figure:
+    """Magnitude response (dB) of one or more filter designs.
+
+    ``keep_frequencies`` (e.g. SSVEP targets) are marked with dashed lines and
+    ``reject_frequencies`` (drift, mains, out-of-band) with dotted lines.
+    """
+    fig, ax = _get_ax(ax, (7, 4))
+    for i, (name, db) in enumerate(response_db.items()):
+        ax.plot(
+            freqs_hz,
+            np.clip(db, ylim_db[0] - 10, None),
+            color=PALETTE[i % len(PALETTE)],
+            lw=2,
+            label=name,
+        )
+    for marks, ls in ((keep_frequencies or {}, "--"), (reject_frequencies or {}, ":")):
+        for name, f in marks.items():
+            ax.axvline(f, color=MUTED, lw=1, ls=ls)
+            ax.text(
+                f,
+                ylim_db[1],
+                f" {name}",
+                rotation=90,
+                va="top",
+                ha="right",
+                fontsize=8,
+                color=MUTED,
+            )
+    ax.set_ylim(*ylim_db)
+    if log_freq:
+        ax.set_xscale("log")
+        ticks = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100]
+        ax.set_xticks(ticks, [f"{t:g}" for t in ticks])
+    ax.set_xlabel("Frequency (Hz)")
+    ax.set_ylabel("Gain (dB)")
+    ax.set_title(title, fontsize=11)
+    if len(response_db) >= 2:
+        ax.legend(frameon=False, fontsize=9, loc="lower left")
+    _style(ax, grid_axis="both")
+    return fig
+
+
+def plot_table(
+    header: Sequence[str],
+    rows: Sequence[Sequence[str]],
+    *,
+    title: str = "",
+    highlight_rows: Sequence[int] = (),
+    col_widths: Sequence[float] | None = None,
+) -> Figure:
+    """Render a small text table as a figure (for reports that need an image).
+
+    Column widths default to the longest cell text per column, and the figure is
+    sized to fit the table so nothing is clipped and no blank space is left.
+    """
+    cells = [list(header), *[list(r) for r in rows]]
+    chars = [max(len(str(r[c])) for r in cells) + 2 for c in range(len(header))]
+    if col_widths is None:
+        col_widths = [n / sum(chars) for n in chars]
+    width_in = max(4.0, 0.085 * sum(chars))
+    height_in = 0.3 * (len(rows) + 1) + (0.45 if title else 0.1)
+    fig = Figure(figsize=(width_in, height_in))
+    title_frac = 0.4 / height_in if title else 0.02
+    ax = fig.add_axes((0.005, 0.005, 0.99, 0.99 - title_frac))
+    ax.axis("off")
+    table = ax.table(
+        cellText=cells[1:],
+        colLabels=cells[0],
+        cellLoc="center",
+        colWidths=list(col_widths),
+        bbox=(0, 0, 1, 1),
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    for (r, _c), cell in table.get_celld().items():
+        cell.set_edgecolor(GRID)
+        if r == 0:
+            cell.set_text_props(weight="bold", color=INK)
+            cell.set_facecolor("#f2f2f2")
+        elif (r - 1) in highlight_rows:
+            cell.set_facecolor("#fde8d8")
+    if title:
+        fig.text(0.5, 1 - 0.2 / height_in, title, ha="center", va="center", fontsize=11, color=INK)
+    return fig

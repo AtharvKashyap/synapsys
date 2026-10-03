@@ -1,0 +1,54 @@
+synapsys-decoder/
+├── configs/
+│   ├── benchmark.yaml
+│   └── synapsys.yaml
+├── data/
+│   ├── .gitkeep
+│   └── README.md
+├── docs/
+│   ├── figures/
+│   │   └── ...
+│   ├── algorithm.md
+│   └── validation.md
+├── results/
+│   └── .gitkeep
+├── scripts/
+│   ├── analyze_recording.py
+│   ├── run_benchmark_validation.py
+│   └── run_synthetic_validation.py
+├── src/
+│   └── synapsys_decoder/
+│       ├── io/
+│       │   ├── __init__.py
+│       │   ├── benchmark.py
+│       │   └── csv_eeg.py
+│       ├── __init__.py
+│       ├── cca.py
+│       ├── classifier.py
+│       ├── config.py
+│       ├── metrics.py
+│       ├── pipeline.py
+│       ├── plotting.py
+│       ├── preprocessing.py
+│       ├── references.py
+│       ├── runlog.py
+│       ├── synthetic.py
+│       └── types.py
+├── tests/
+│   ├── test_benchmark_script.py
+│   ├── test_cca.py
+│   ├── test_classifier.py
+│   ├── test_config.py
+│   ├── test_io_benchmark.py
+│   ├── test_io_csv.py
+│   ├── test_metrics.py
+│   ├── test_pipeline.py
+│   ├── test_plotting.py
+│   ├── test_preprocessing.py
+│   ├── test_references.py
+│   └── test_synthetic.py
+├── .gitignore
+├── .venv
+├── CLAUDE.md
+├── README.md
+└── pyproject.toml

@@ -1,0 +1,48 @@
+sample_rate_hz: 250.0
+channels:
+- O1
+- Oz
+- O2
+- POz
+targets:
+  'YES': 8.5714285714
+  'NO': 12.0
+  HELP: 15.0
+window_seconds: 2.5
+harmonics: 2
+preprocessing:
+  remove_dc: true
+  bandpass_low_hz: 0.5
+  bandpass_high_hz: 45.0
+  bandpass_order: 4
+  notch_hz: 60.0
+  notch_q: 30.0
+  mode: causal
+decision:
+  confidence_threshold: null
+  margin_threshold: null
+variants:
+  causal:
+    remove_dc: true
+    bandpass_low_hz: 0.5
+    bandpass_high_hz: 45.0
+    bandpass_order: 4
+    notch_hz: 60.0
+    notch_q: 30.0
+    mode: causal
+  zero_phase:
+    remove_dc: true
+    bandpass_low_hz: 0.5
+    bandpass_high_hz: 45.0
+    bandpass_order: 4
+    notch_hz: 60.0
+    notch_q: 30.0
+    mode: zero_phase
+  none:
+    remove_dc: false
+    bandpass_low_hz: null
+    bandpass_high_hz: null
+    bandpass_order: 4
+    notch_hz: null
+    notch_q: 30.0
+    mode: causal

@@ -63,3 +63,18 @@ def test_score_distributions(tmp_path):
     assert isinstance(fig, Figure)
     out = pl.save_figure(fig, tmp_path / "sub" / "dir" / "f.png")
     assert out.exists() and out.stat().st_size > 0
+
+
+def test_filter_response_and_table_smoke(tmp_path):
+    from synapsys_decoder.plotting import plot_filter_response, plot_table, save_figure
+
+    f = np.linspace(0.1, 100, 50)
+    fig = plot_filter_response(
+        f,
+        {"a": -f / 10, "b": -f / 5},
+        keep_frequencies={"x": 12.0},
+        reject_frequencies={"mains": 60.0},
+    )
+    assert save_figure(fig, tmp_path / "r.png").exists()
+    fig = plot_table(["a", "b"], [["1", "2"], ["3", "4"]], title="t", highlight_rows=[1])
+    assert save_figure(fig, tmp_path / "t.png").exists()

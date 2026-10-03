@@ -101,6 +101,16 @@ src/synapsys_decoder/
 tests/                   pytest suite, one file per module plus script smoke tests
 ```
 
+## Evidence for reports
+
+```bash
+.venv/bin/python scripts/make_report_artifacts.py --out docs/report   # ~1.5 min
+.venv/bin/python scripts/mutation_check.py                            # tests-catch-bugs proof
+```
+
+`docs/report/INDEX.md` maps each generated file (repo tree, pytest summary, example CCA
+table, filter response, PSD before/after, accuracy vs SNR, mutation report) to its use.
+
 ## Status
 
 | # | Milestone (handoff spec §16) | Status |

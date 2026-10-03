@@ -8,12 +8,39 @@ synapsys-decoder/
 ├── docs/
 │   ├── figures/
 │   │   └── ...
+│   ├── report/
+│   │   ├── synthetic/
+│   │   │   └── 20261003-232651_synthetic_validation/
+│   │   │       ├── accuracy_vs_snr.png
+│   │   │       ├── clean_cca_scores.png
+│   │   │       ├── config.yaml
+│   │   │       ├── confusion_snr-20.png
+│   │   │       ├── gating_scatter.png
+│   │   │       ├── psd_before_after.png
+│   │   │       ├── run.json
+│   │   │       ├── score_distributions.png
+│   │   │       └── trials.csv
+│   │   ├── INDEX.md
+│   │   ├── cca_examples.csv
+│   │   ├── cca_examples.md
+│   │   ├── cca_examples.png
+│   │   ├── filter_response.png
+│   │   ├── filter_response_table.md
+│   │   ├── mutation_report.md
+│   │   ├── psd_before_after.png
+│   │   ├── pytest_output.txt
+│   │   ├── repo_tree.png
+│   │   ├── repo_tree.txt
+│   │   ├── test_summary.md
+│   │   └── test_summary.png
 │   ├── algorithm.md
 │   └── validation.md
 ├── results/
 │   └── .gitkeep
 ├── scripts/
 │   ├── analyze_recording.py
+│   ├── make_report_artifacts.py
+│   ├── mutation_check.py
 │   ├── run_benchmark_validation.py
 │   └── run_synthetic_validation.py
 ├── src/
@@ -48,7 +75,6 @@ synapsys-decoder/
 │   ├── test_references.py
 │   └── test_synthetic.py
 ├── .gitignore
-├── .venv
 ├── CLAUDE.md
 ├── README.md
 └── pyproject.toml

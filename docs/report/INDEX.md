@@ -11,6 +11,6 @@ not human-EEG performance.
 | Table: True f / ρ8.57 / ρ12 / ρ15 / Predicted | `cca_examples.png` / `.md` / `.csv` |
 | Graph: PSD before/after preprocessing | `psd_before_after.png` |
 | (extra) DSP design evidence | `filter_response.png`, `filter_response_table.md` |
-| (extra) accuracy degrades with noise | `synthetic/20261003-232651_synthetic_validation/accuracy_vs_snr.png` |
-| (extra) clean-trial CCA bars per command | `synthetic/20261003-232651_synthetic_validation/clean_cca_scores.png` |
+| (extra) accuracy degrades with noise | `synthetic/20261003-232842_synthetic_validation/accuracy_vs_snr.png` |
+| (extra) clean-trial CCA bars per command | `synthetic/20261003-232842_synthetic_validation/clean_cca_scores.png` |
 | (extra) proof the tests catch bugs | `mutation_report.md` |

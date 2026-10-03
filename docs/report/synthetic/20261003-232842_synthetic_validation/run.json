@@ -1,5 +1,5 @@
 {
-  "run_id": "20261003-232651_synthetic_validation",
+  "run_id": "20261003-232842_synthetic_validation",
   "command": [
     "scripts/make_report_artifacts.py",
     "--out",
@@ -11,7 +11,7 @@
     "numpy": "2.5.3",
     "scipy": "1.18.1",
     "matplotlib": "3.11.2",
-    "git_revision": "c3713c4351c3231e446864fd0b53a75dc5da4c2d-dirty"
+    "git_revision": "dc9b23f3508bf674af7b1110b206a3750a2c9a92-dirty"
   },
   "metrics": {
     "disclaimer": "Synthetic pipeline-behaviour validation only; not human EEG performance.",

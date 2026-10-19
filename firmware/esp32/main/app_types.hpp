@@ -22,6 +22,19 @@ struct Sample {
   uint16_t pass;    // replay: pass number (0-based); live: 0
 };
 
+// Decoder channel names in config order (raw-stream header).
+inline constexpr const char* kChannelNames[synapsys::kChannels] = {"O1", "Oz", "O2", "POz"};
+
+// One raw sample for the optional console stream (CONFIG_SYNAPSYS_RAW_STREAM).
+struct RawSample {
+  double v[synapsys::kChannels];  // volts, exactly as pushed to the decoder (before DC removal)
+  uint32_t seq;          // samples since this stream's start, 0-based
+  uint32_t lost_before;  // raw samples lost (queue full) since the previous queued record
+  uint8_t lost_stream;   // stream the first of those lost samples belonged to
+  uint8_t stream;        // replay: fixture index; live: 0
+  bool start;            // first queued record of a stream: print the raw_info header first
+};
+
 enum SampleFlag : uint8_t {
   kFlagStreamStart = 1u << 0,  // reset decoder + re-arm before pushing this sample
   kFlagStreamEnd = 1u << 1,    // last sample of a replay stream: finalise its self-check
@@ -52,6 +65,7 @@ struct DecoderStats {
   std::atomic<uint32_t> dec_us_avg{0};   // lifetime mean (decoder task keeps 64-bit sums)
   std::atomic<uint32_t> filt_ns_avg{0};  // mean time of a non-decision push (filter only), ns
   std::atomic<uint32_t> events_dropped{0};  // output queue full
+  std::atomic<uint32_t> raw_dropped{0};     // raw-stream queue full (sample not printed)
 };
 
 enum class EventType : uint8_t {
@@ -92,6 +106,7 @@ struct Event {
 struct Context {
   QueueHandle_t samples = nullptr;  // Sample
   QueueHandle_t events = nullptr;   // Event
+  QueueHandle_t raw = nullptr;      // RawSample; nullptr unless CONFIG_SYNAPSYS_RAW_STREAM
   SourceStats* source = nullptr;
   DecoderStats* decoder = nullptr;
   const synapsys::Config* cfg = nullptr;

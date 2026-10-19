@@ -157,7 +157,7 @@ Interpretation limits: different hardware, electrodes, montage, stimulus display
 
 ## 5. Threshold calibration plan
 
-Applies to own-system data only. Thresholds stay `null` until this is done.
+Applies to own-system data only. Thresholds stay `null` until this is done. Implemented by `scripts/calibrate_thresholds.py` and `scripts/evaluate_heldout.py`; the step-by-step workflow and the exact selection rule are in [calibration.md](calibration.md).
 
 1. Collect a **development** set and a separate **held-out** test set (split by block/session, never by random window within a block). The development set must include **rest windows** (no stimulus attended) as well as the three targets.
 2. On the development set, sweep a grid of (T, M) = (confidence threshold, margin threshold), including "off" for either, and tabulate per pair: total accuracy, accepted accuracy, rejection rate, and false-activation rate on rest windows.

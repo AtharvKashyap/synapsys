@@ -213,6 +213,24 @@ menu "SynapSys BCI"
             bool "Print one JSON line per decision point"
             default y
 
+        config SYNAPSYS_RAW_STREAM
+            bool "Stream every raw sample on the console (calibration recordings)"
+            default n
+            help
+                Prints one line per sample, "RAW <seq> <O1> <Oz> <O2> <POz>" in microvolts
+                (before DC removal and filtering), preceded at each stream start by a
+                "SSVEP {"event":"raw_info",...}" header. Lost samples are reported as
+                "SSVEP {"event":"raw_gap",...}" and counted as raw_dropped in the health
+                line; seq is contiguous otherwise. About 11 kB/s: needs the native
+                USB-Serial/JTAG console or a UART at >= 921600 baud. Decisions and
+                commands are unaffected.
+
+        config SYNAPSYS_RAW_QUEUE_LEN
+            int "Raw-sample output queue length (samples)"
+            depends on SYNAPSYS_RAW_STREAM
+            range 32 4096
+            default 256
+
         config SYNAPSYS_HEALTH_PERIOD_MS
             int "Health line period (ms, 0 = off)"
             range 0 600000

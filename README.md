@@ -59,15 +59,19 @@ All commands from the repo root.
 
 | Goal | Command |
 |---|---|
-| Unit tests | `.venv/bin/pytest -q` (190 passed, 1 skipped: the real-data benchmark test, skipped when `data/benchmark/` is absent) |
+| Unit tests | `.venv/bin/pytest -q` (268 tests; the real-data benchmark tests skip when `data/benchmark/` is absent) |
 | Format / lint | `.venv/bin/ruff format . && .venv/bin/ruff check .` |
 | Synthetic validation (M6) | `.venv/bin/python scripts/run_synthetic_validation.py` |
 | Inspect one own-hardware CSV recording | `.venv/bin/python scripts/analyze_recording.py data/synapsys/rec.csv [--config configs/synapsys.yaml] [--step-seconds 0.5]` |
+| Record own EEG from the ESP32 (raw stream on) | `.venv/bin/python scripts/record_serial.py --port /dev/cu.usbmodem* --seconds 20 --label YES --split calibration --out data/synapsys/S01/cal/yes_01.csv` |
+| Choose T/M on calibration recordings | `.venv/bin/python scripts/calibrate_thresholds.py data/synapsys/S01/cal --max-rest-commands-per-min <team limit>` |
+| One held-out evaluation (frozen T/M) | `.venv/bin/python scripts/evaluate_heldout.py data/synapsys/S01/test` |
+| Device decisions == Python on captured samples | `.venv/bin/python scripts/verify_device_log.py capture.serial.log` |
 | Public benchmark (milestones 7-8, requires `data/benchmark/`, see [data/README.md](data/README.md)) | `.venv/bin/python scripts/run_benchmark_validation.py --config configs/benchmark.yaml` |
 
 Every script run writes `results/<run_id>/` containing the config used, `run.json` (metrics, seed, package versions, git revision), per-trial predictions (`trials.csv`) and figures. `results/` is a scratch/archive area; the figures embedded below are a copy of one synthetic run in `docs/figures/synthetic/` (including its `run.json`).
 
-`analyze_recording.py` is a debugging / biological-validation tool (PSD before/after filtering, sliding-window CCA scores over time), not an accuracy evaluation.
+`analyze_recording.py` is a debugging / biological-validation tool (PSD before/after filtering, sliding-window CCA scores over time), not an accuracy evaluation. The recording → calibration → held-out workflow is in [docs/calibration.md](docs/calibration.md).
 
 ## Repository layout
 
@@ -79,11 +83,16 @@ data/                    raw EEG, git-ignored (see data/README.md)
 docs/
   algorithm.md           equations, filter design, gating semantics, ESP32 porting notes
   validation.md          validation strategy, synthetic results, benchmark and hardware plans
+  calibration.md         own-system recording, T/M calibration, held-out evaluation (M11)
   figures/synthetic/     figures + run.json from the synthetic run
 scripts/
   run_synthetic_validation.py
   analyze_recording.py
   run_benchmark_validation.py   (M7-M8)
+  record_serial.py              raw EEG from the ESP32 -> CSV trials (M11)
+  calibrate_thresholds.py       T/M from calibration recordings, fixed selection rule
+  evaluate_heldout.py           the single held-out evaluation
+  verify_device_log.py          device decisions vs Python on the same captured samples
 src/synapsys_decoder/
   config.py              YAML -> DecoderConfig dataclasses, validation
   types.py               Trial, ClassificationResult, REJECT
@@ -92,12 +101,16 @@ src/synapsys_decoder/
   classifier.py          score_targets, decide (gating), classify_window
   preprocessing.py       DC removal, Butterworth SOS, notch, StreamingFilter, windowing, response analysis
   pipeline.py            decode_trial: select channels -> filter whole epoch -> crop window -> classify
+  streaming.py           decode_stream: device decision schedule offline, re-gating without recomputing CCA
+  calibration.py         T/M sweep, command-level metrics via re-arm, selection rule, split guards
+  rearm.py               command re-arming state machine (spec for the C++ port)
   synthetic.py           synthetic SSVEP / noise / off-target / mixture generators
   metrics.py             accuracy, accepted accuracy, rejection rate, confusion, ITR, false-activation rate
   plotting.py            figures (never imported by algorithm modules)
   runlog.py              run directories and reproducibility artifacts
   io/benchmark.py        Wang 2017 .mat loader (no filtering/resampling)
   io/csv_eeg.py          CSV + JSON-sidecar trial format (also the planned Python<->ESP32 fixture format)
+  io/serial_log.py       firmware serial output -> raw streams (gap checks) + device decisions
 tests/                   pytest suite, one file per module plus script smoke tests
 ```
 
@@ -139,7 +152,7 @@ table, filter response, PSD before/after, accuracy vs SNR, mutation report) to i
 | M8 | Window / harmonic / channel experiments | Run on S1–S3 (see docs/validation.md); baseline config choice still to be documented |
 | M9 | Embedded design: causal DSP + CCA in C/C++ | Done: C++ core matches Python on all fixtures (float scores ≤ 9e-5); re-arm identical on 140 sequences; ESP-IDF firmware builds |
 | M10 | Cross-platform regression: Python vs ESP32 fixtures | Passes in QEMU ESP32-S3 (48/48, real-time 250 Hz); on a physical board: pending |
-| M11 | Hardware integration: acquisition, alpha, SSVEP, calibration, held-out test | Not started |
+| M11 | Hardware integration: acquisition, alpha, SSVEP, calibration, held-out test | Tooling ready (raw stream verified in QEMU; record / calibrate / evaluate scripts tested); needs the board |
 
 ## Headline synthetic results
 

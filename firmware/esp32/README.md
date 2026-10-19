@@ -162,6 +162,7 @@ Data path:
 | `SYNAPSYS_MARGIN_THRESHOLD_EN` + `SYNAPSYS_MARGIN_THRESHOLD` | n, "0.05" | margin threshold M, same parsing and caveat |
 | `SYNAPSYS_REARM_CONFIRM` / `_REFRACTORY` / `_RELEASE` | 2 / 625 / 2 | re-arm K, R (samples), N |
 | `SYNAPSYS_PRINT_DECISIONS` | y | JSON line per decision point |
+| `SYNAPSYS_RAW_STREAM` / `_RAW_QUEUE_LEN` | n / 256 | print every raw sample (calibration recordings, see below). ~11 kB/s: native USB console or UART >= 921600 baud |
 | `SYNAPSYS_HEALTH_PERIOD_MS` | 5000 | health line period |
 | `SYNAPSYS_TIMING_EVERY` | 20 | timing min/avg/max every N decisions |
 | `SYNAPSYS_LED_GPIO` | -1 | plain LED. It toggles at each decision point and stays on for 300 ms after a command. (The DevKitC RGB LED on GPIO 48 is addressable and not supported.) |
@@ -187,6 +188,29 @@ Field notes:
   with `esp_timer_get_time`.
 - `stack_free` is the FreeRTOS high-water mark in bytes.
 - Degenerate windows print `"status":"DEGENERATE","winner":"NONE","decision":"REJECT"`.
+
+### Raw-sample stream (`SYNAPSYS_RAW_STREAM`, off by default)
+
+For own-system calibration recordings. Decisions and commands are unchanged; the extra
+lines are:
+
+```
+SSVEP {"event":"raw_info","fs":250,"units":"uV","channels":["O1","Oz","O2","POz"],"source":"ads1299","stream":"live"}
+RAW 0 -12.267 -1.656 17.407 17.664
+RAW 1 ...
+SSVEP {"event":"raw_gap","stream":"live","lost":3,"next_seq":4711}   (only if samples were lost)
+```
+
+- `raw_info` is printed once per stream start (live: the first sample; replay: every
+  fixture, `stream` = fixture id), before that stream's `RAW` lines.
+- `RAW <seq> <O1> <Oz> <O2> <POz>`: `seq` counts samples from the stream start (0-based,
+  contiguous unless a `raw_gap` line says otherwise); values are microvolts with 3
+  decimals, **before** DC removal and filtering (exactly what the decoder is fed).
+- Samples lost because the raw queue was full are reported by `raw_gap` (before the next
+  `RAW` line) and counted as `raw_dropped` in the health line. A recording with a gap
+  should be discarded, not stitched.
+- Verified in QEMU: 6 fixtures x 1500 samples, contiguous `seq`, no gaps, values equal the
+  fixture inputs to within the 0.0005 uV print rounding; replay still 48/48 PASS.
 
 ## BLE (NimBLE peripheral)
 

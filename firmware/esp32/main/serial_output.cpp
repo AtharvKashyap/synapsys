@@ -194,6 +194,51 @@ void print_summary(const app::Event& ev) {
   }
 }
 
+// ---- optional raw-sample stream (CONFIG_SYNAPSYS_RAW_STREAM) ----
+const char* raw_stream_name(uint8_t stream) {
+  return s_replay ? replay::stream_name(stream) : "live";
+}
+
+void print_raw_info(uint8_t stream) {
+  Line l;
+  l.add("{\"event\":\"raw_info\",\"fs\":%g,\"units\":\"uV\",\"channels\":[",
+        s_ctx.cfg->sample_rate_hz);
+  for (int c = 0; c < synapsys::kChannels; ++c) {
+    l.add("%s\"%s\"", c ? "," : "", app::kChannelNames[c]);
+  }
+  l.add("],\"source\":\"%s\",\"stream\":\"%s\"}", s_ctx.source_name, raw_stream_name(stream));
+  l.emit();
+}
+
+void print_raw_gap(const app::RawSample& r) {
+  Line l;
+  l.add("{\"event\":\"raw_gap\",\"stream\":\"%s\",\"lost\":%u,\"next_seq\":%u}",
+        raw_stream_name(r.lost_stream), static_cast<unsigned>(r.lost_before),
+        static_cast<unsigned>(r.seq));
+  l.emit();
+}
+
+// Prints every queued raw sample (no flush per line; the caller flushes once).
+void drain_raw() {
+  app::RawSample r;
+  char buf[160];
+  bool any = false;
+  while (xQueueReceive(s_ctx.raw, &r, 0) == pdTRUE) {
+    any = true;
+    // Header before the stream's samples; a gap inside the new stream follows its header,
+    // a gap belonging to the previous stream precedes it.
+    const bool gap_here = r.lost_before > 0 && r.start && r.lost_stream == r.stream;
+    if (r.lost_before > 0 && !gap_here) print_raw_gap(r);
+    if (r.start) print_raw_info(r.stream);
+    if (gap_here) print_raw_gap(r);
+    const int n = snprintf(buf, sizeof(buf), "RAW %u %.3f %.3f %.3f %.3f\n",
+                           static_cast<unsigned>(r.seq), r.v[0] * 1e6, r.v[1] * 1e6,
+                           r.v[2] * 1e6, r.v[3] * 1e6);
+    if (n > 0) fwrite(buf, 1, static_cast<size_t>(n) < sizeof(buf) ? n : sizeof(buf) - 1, stdout);
+  }
+  if (any) fflush(stdout);
+}
+
 unsigned stack_free(TaskHandle_t h) {
   return h ? static_cast<unsigned>(uxTaskGetStackHighWaterMark(h)) : 0u;  // bytes in ESP-IDF
 }
@@ -218,6 +263,9 @@ void print_health(float fs_measured, float uptime_s) {
   l.add(",\"decisions\":%u,\"degenerate\":%u,\"commands\":%u,\"events_dropped\":%u",
         static_cast<unsigned>(ds.decisions.load()), static_cast<unsigned>(ds.degenerate.load()),
         static_cast<unsigned>(ds.commands.load()), static_cast<unsigned>(ds.events_dropped.load()));
+  if (s_ctx.raw != nullptr) {
+    l.add(",\"raw_dropped\":%u", static_cast<unsigned>(ds.raw_dropped.load()));
+  }
   l.add(",\"dec_ms\":{\"min\":%.3f,\"avg\":%.3f,\"max\":%.3f},\"filter_us\":%.2f",
         dmin == UINT32_MAX ? 0.0 : dmin / 1000.0, ds.dec_us_avg.load() / 1000.0,
         ds.dec_us_max.load() / 1000.0, ds.filt_ns_avg.load() / 1000.0);
@@ -248,7 +296,10 @@ void output_task(void* /*arg*/) {
   app::Event ev;
 
   for (;;) {
-    TickType_t wait = pdMS_TO_TICKS(100);  // also drives the LED hold timeout
+    // Also drives the LED hold timeout. With the raw stream on, wake often enough to keep
+    // up with 250 samples/s (the raw queue is drained below, every iteration).
+    const TickType_t wait = s_ctx.raw != nullptr ? pdMS_TO_TICKS(5) : pdMS_TO_TICKS(100);
+    if (s_ctx.raw != nullptr) drain_raw();
     if (xQueueReceive(s_ctx.events, &ev, wait) == pdTRUE) {
       switch (ev.type) {
         case app::EventType::kDecision: print_decision(ev); break;

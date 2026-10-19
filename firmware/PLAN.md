@@ -11,6 +11,7 @@ Status (2026-10-19): **phases 0-5 done**, phase 6 code written, needs a physical
 | 4 Re-arm | done | Python reference + C++ port identical on 140 sequences / 5800 steps |
 | 5 ESP-IDF + playback | done in QEMU | real firmware, real-time 250 Hz replay, 48/48 PASS; physical board pending |
 | 6 ADS1299 + BLE | code written, builds | needs PCB/board: register read-back, DRDY 250 Hz, BLE notify, 30 min soak |
+| 7 prep: raw stream | done in QEMU | optional `SYNAPSYS_RAW_STREAM` prints every raw sample (uV) for calibration recordings; 9000/9000 samples, no gaps, 48/48 PASS |
 
 
 ## 0. Goal and scope
@@ -174,6 +175,9 @@ set, freeze it as reference v1.1, then port.
   stimulus change to BLE notification measured with the stimulus sync signal.
 
 ### Phase 7: hand-off to hardware validation (M11)
+Tooling (done, no board needed): optional raw-sample stream in the firmware, `record_serial.py`,
+`calibrate_thresholds.py`, `evaluate_heldout.py`, `verify_device_log.py`; workflow in
+`docs/calibration.md`, QEMU evidence in `reports/raw_stream_qemu.md`.
 Alpha blocking → single-frequency SSVEP (incl. 8.571 Hz and the 60 Hz notch on human EEG)
 → three-target calibration set with rest trials → choose T, M (and re-arm parameters) on
 calibration data → one held-out evaluation.

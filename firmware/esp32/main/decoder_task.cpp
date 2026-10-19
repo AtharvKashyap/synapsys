@@ -31,6 +31,36 @@ void post(const app::Event& ev, TickType_t wait = kPostWait) {
   }
 }
 
+// Raw-stream bookkeeping (decoder task only): samples lost since the last queued record.
+uint32_t s_raw_lost = 0;
+uint8_t s_raw_lost_stream = 0;
+bool s_raw_start_lost = false;
+
+// Queues one raw sample for the console stream; never blocks (a full queue drops the
+// sample and reports the gap with the next record that fits).
+void queue_raw(const app::Sample& s, uint32_t seq, bool stream_start) {
+  app::RawSample rs;
+  for (int c = 0; c < synapsys::kChannels; ++c) rs.v[c] = s.v[c];
+  rs.seq = seq;
+  rs.stream = s.stream;
+  rs.lost_before = s_raw_lost;
+  rs.lost_stream = s_raw_lost_stream;
+  rs.start = stream_start || (s_raw_start_lost && s_raw_lost_stream == s.stream);
+  if (xQueueSend(s_ctx.raw, &rs, 0) == pdTRUE) {
+    s_raw_lost = 0;
+    s_raw_start_lost = false;
+  } else {
+    if (s_raw_lost == 0) s_raw_lost_stream = s.stream;
+    // A lost stream start must still produce a header (with a gap) for that stream.
+    if (stream_start) {
+      s_raw_start_lost = true;
+      s_raw_lost_stream = s.stream;
+    }
+    ++s_raw_lost;
+    s_ctx.decoder->raw_dropped.fetch_add(1, std::memory_order_relaxed);
+  }
+}
+
 void decoder_task(void* /*arg*/) {
   app::DecoderStats* ds = s_ctx.decoder;
   const synapsys::Config& cfg = *s_ctx.cfg;
@@ -61,6 +91,7 @@ void decoder_task(void* /*arg*/) {
     const uint32_t dt = static_cast<uint32_t>(esp_timer_get_time() - t0);
     ++stream_t;
     ds->samples.fetch_add(1, std::memory_order_relaxed);
+    if (s_ctx.raw != nullptr) queue_raw(s, stream_t - 1, (s.flags & app::kFlagStreamStart) != 0);
 
     if (!got) {
       filt_sum_us += dt;

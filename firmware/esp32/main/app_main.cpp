@@ -135,6 +135,15 @@ extern "C" void app_main(void) {
            CONFIG_SYNAPSYS_SAMPLE_QUEUE_LEN, static_cast<unsigned>(sizeof(app::Sample)),
            CONFIG_SYNAPSYS_SAMPLE_QUEUE_LEN / s_cfg.sample_rate_hz,
            CONFIG_SYNAPSYS_EVENT_QUEUE_LEN, static_cast<unsigned>(sizeof(app::Event)));
+#if CONFIG_SYNAPSYS_RAW_STREAM
+  ctx.raw = xQueueCreate(CONFIG_SYNAPSYS_RAW_QUEUE_LEN, sizeof(app::RawSample));
+  if (ctx.raw == nullptr) {
+    ESP_LOGE(kTag, "raw queue allocation failed; raw stream disabled");
+  } else {
+    ESP_LOGI(kTag, "raw stream ON: \"RAW <seq> <O1> <Oz> <O2> <POz>\" (uV) per sample, "
+             "queue %d x %u B", CONFIG_SYNAPSYS_RAW_QUEUE_LEN, static_cast<unsigned>(sizeof(app::RawSample)));
+  }
+#endif
 
   // ---- BLE.
   bool ble = false;

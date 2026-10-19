@@ -15,10 +15,14 @@ Sibling repo `../synapsys-stimulus` is the PsychoPy stimulus renderer — keep t
 .venv/bin/python scripts/fetch_benchmark.py 1 2 3            # Wang data -> data/benchmark/ (needs .[data])
 .venv/bin/python scripts/benchmark_walkthrough.py         # 7-stage real-EEG check + viewer page
 .venv/bin/python scripts/make_fixtures.py               # regenerate fixtures/ (Python->C++ regression set)
-.venv/bin/python scripts/mutation_check.py
+.venv/bin/python scripts/mutation_check.py              # plant 11 bugs, confirm tests catch each (~1 min)
 cmake -S firmware/decoder -B firmware/decoder/build -G Ninja && cmake --build firmware/decoder/build && ctest --test-dir firmware/decoder/build   # C++ core vs fixtures
 . ~/esp/esp-idf/export.sh && cd firmware/esp32 && idf.py build flash monitor   # ESP-IDF v5.3.2
-firmware/tools/run_qemu.sh                                 # real firmware in QEMU, no board (exit 0 = PASS)                # plant 11 bugs, confirm tests catch each (~1 min)
+firmware/tools/run_qemu.sh                                 # real firmware in QEMU, no board (exit 0 = PASS)
+.venv/bin/python scripts/record_serial.py --port /dev/cu.usbmodem* --seconds 20 --label YES --split calibration --out data/synapsys/S01/cal/yes_01.csv   # needs .[record], RAW_STREAM=y
+.venv/bin/python scripts/calibrate_thresholds.py data/synapsys/S01/cal --max-rest-commands-per-min <team limit>
+.venv/bin/python scripts/evaluate_heldout.py data/synapsys/S01/test      # once, frozen T/M
+.venv/bin/python scripts/verify_device_log.py capture.serial.log         # device == Python on captured samples
 .venv/bin/python scripts/make_report_artifacts.py --out docs/report   # all weekly-report evidence
 ```
 macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applies the `hidden` flag to files in dot-dirs; Python 3.13 then skips the editable-install `.pth` (`ModuleNotFoundError: synapsys_decoder`). So the venv lives at `~/.venvs/synapsys-decoder` and `.venv` is a symlink to it (recreate: `python3 -m venv ~/.venvs/synapsys-decoder && ln -s ~/.venvs/synapsys-decoder .venv`). pytest also sets `pythonpath = ["src"]`.
@@ -33,6 +37,8 @@ macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applie
 - `fixtures/`: synthetic fixtures committed; `fixtures/wang/` generated locally (dataset redistribution terms unstated) and verified via `MANIFEST.json` hashes.
 - The C++ must port the Björck–Golub SVD/QR CCA (no covariance inversion, no regularisation). References restart at t=0 each window (constant tables).
 - `firmware/`: ESP32/C++ work. Follow `firmware/PLAN.md` phase gates.
+- M11 workflow (docs/calibration.md): recordings carry `true_label` (target or `REST`) and `metadata.split` (`calibration`|`test`|`pilot`). `calibrate_thresholds.py` refuses `test`; `evaluate_heldout.py` accepts only `test` and takes T/M from the config only. The false-activation limit (`--max-rest-commands-per-min`) is a team decision: never pick it yourself.
+- Serial line formats (`SSVEP {json}`, `RAW <seq> <uV x4>`) are shared by `serial_output.cpp` and `io/serial_log.py`: change both together.
 
 ## Conventions (do not change silently)
 - EEG arrays: `(n_channels, n_samples)`, float64, **volts**. Select channels by name.
@@ -56,11 +62,11 @@ macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applie
 ## Layout
 `src/synapsys_decoder/`: `config.py`, `types.py` (Trial, ClassificationResult, REJECT),
 `references.py`, `cca.py`, `classifier.py`, `preprocessing.py`, `synthetic.py`,
-`metrics.py`, `plotting.py`, `pipeline.py` (decode_trial: select→filter epoch→crop→classify), `runlog.py` (results/<run_id>/ artifacts), `io/{benchmark,csv_eeg}.py`.
+`metrics.py`, `plotting.py`, `pipeline.py` (decode_trial: select→filter epoch→crop→classify), `streaming.py` (device schedule offline), `calibration.py` (T/M sweep + selection rule), `rearm.py`, `runlog.py` (results/<run_id>/ artifacts), `io/{benchmark,csv_eeg,serial_log}.py`.
 Scripts: `run_synthetic_validation.py` (M6), `run_benchmark_validation.py` (M7–M8), `analyze_recording.py` (own CSV recordings).
 `docs/figures/synthetic/` = committed copy of a synthetic run made from a clean tree; regenerate + recopy if algorithm code changes. Docs in `docs/algorithm.md`,
 `docs/validation.md`.
 
 ## Milestone status
-See README "Status" (M1–M7 done; M8 sweeps run on S1–S3 (2026-10-18), baseline choice to document; S1–S3 downloaded). Python reference frozen 2026-10-18. ESP32 port: phases 0-5 done (host equivalence + QEMU replay 48/48); phase 6 hardware (ADS1299/BLE on a real board) pending. Disk on this Mac is nearly full (~3 GB free): keep one ESP-IDF build dir.
+See README "Status" (M1–M7 done; M8 sweeps run on S1–S3 (2026-10-18), baseline choice to document; S1–S3 downloaded). Python reference frozen 2026-10-18. ESP32 port: phases 0-5 done (host equivalence + QEMU replay 48/48); phase 6 hardware (ADS1299/BLE on a real board) pending. M11 tooling ready: optional firmware raw stream (QEMU: 9000 samples, no gaps; device == Python 48/48 via verify_device_log.py). Disk on this Mac is nearly full (~3 GB free): keep one ESP-IDF build dir.
 - Feed the decoder with `push_f64` (DC removal before float rounding); on ESP32-S3 the 16 KB 'IRAM 99.99%' line in idf.py size is normal (overflow goes to DIRAM).

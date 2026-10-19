@@ -1,0 +1,251 @@
+menu "SynapSys BCI"
+
+    choice SYNAPSYS_INPUT
+        prompt "Input source"
+        default SYNAPSYS_INPUT_REPLAY
+        help
+            Where samples come from. Every source feeds the same sample queue, decoder
+            task, serial output and BLE output.
+
+        config SYNAPSYS_INPUT_REPLAY
+            bool "Fixture replay (no hardware needed; self-check vs Python reference)"
+            help
+                Streams the embedded synthetic fixtures (generated/fixtures_embedded.hpp)
+                at 250 Hz and checks every decision point against the frozen Python
+                reference (|score err| < 1e-3, exact winner and decision). Works on a bare
+                ESP32-S3 board.
+
+        config SYNAPSYS_INPUT_ADS1299
+            bool "ADS1299 live EEG"
+
+        config SYNAPSYS_INPUT_ADS1299_TEST
+            bool "ADS1299 internal test signal"
+            help
+                Configures CONFIG2.INT_CAL and every used channel's input mux to the
+                internal ~1 Hz square-wave test signal. Proves SPI + DRDY + scaling
+                without electrodes. Decoder output is meaningless in this mode.
+    endchoice
+
+    # Menus below are not hidden by the input choice so that every source file always
+    # compiles (both drivers are built in every configuration).
+    menu "Fixture replay"
+
+        config SYNAPSYS_REPLAY_REALTIME
+            bool "Replay at real time (250 Hz via esp_timer)"
+            default y
+            help
+                If disabled, samples are pushed as fast as the queue accepts them
+                (blocking, nothing dropped): a throughput test.
+
+        config SYNAPSYS_REPLAY_LOOP
+            bool "Loop replay forever"
+            default y
+            help
+                Repeat all fixtures after a pause (soak / heap-growth test). If disabled
+                the replay stops after one pass and the board idles.
+
+        config SYNAPSYS_REPLAY_PAUSE_MS
+            int "Pause between replay passes (ms)"
+            range 0 600000
+            default 3000
+    endmenu
+
+    menu "ADS1299"
+
+        config SYNAPSYS_SPI_SCLK_KHZ
+            int "SPI SCLK (kHz)"
+            range 100 8000
+            default 2000
+            help
+                SPI mode 1. At <= 2 MHz one byte lasts longer than tSDECODE (4 tCLK of the
+                2.048 MHz master clock), and the driver additionally waits >= 2 us between
+                command bytes, so any value in range is safe for commands.
+
+        config SYNAPSYS_PIN_SCLK
+            int "SCLK GPIO"
+            default 12
+        config SYNAPSYS_PIN_MOSI
+            int "MOSI (ADS DIN) GPIO"
+            default 11
+        config SYNAPSYS_PIN_MISO
+            int "MISO (ADS DOUT) GPIO"
+            default 13
+        config SYNAPSYS_PIN_CS
+            int "CS GPIO (driven manually)"
+            default 10
+        config SYNAPSYS_PIN_DRDY
+            int "DRDY GPIO (falling-edge interrupt)"
+            default 9
+        config SYNAPSYS_PIN_START
+            int "START GPIO (-1 = tied low, use START command)"
+            range -1 48
+            default 8
+        config SYNAPSYS_PIN_RESET
+            int "RESET GPIO (-1 = tied high, use RESET command)"
+            range -1 48
+            default 7
+        config SYNAPSYS_PIN_PWDN
+            int "PWDN GPIO (-1 = tied high)"
+            range -1 48
+            default 6
+
+        config SYNAPSYS_ADS_GAIN
+            int "PGA gain (1, 2, 4, 6, 8, 12 or 24)"
+            range 1 24
+            default 24
+
+        config SYNAPSYS_ADS_VREF_MV
+            int "Reference voltage VREF (mV)"
+            default 4500
+            help
+                4500 for the internal reference with AVDD-AVSS = 5 V.
+                LSB = 2 * VREF / GAIN / 2^24.
+
+        config SYNAPSYS_CH_O1
+            int "ADS1299 channel carrying O1"
+            range 1 8
+            default 1
+        config SYNAPSYS_CH_OZ
+            int "ADS1299 channel carrying Oz"
+            range 1 8
+            default 2
+        config SYNAPSYS_CH_O2
+            int "ADS1299 channel carrying O2"
+            range 1 8
+            default 3
+        config SYNAPSYS_CH_POZ
+            int "ADS1299 channel carrying POz"
+            range 1 8
+            default 4
+
+        config SYNAPSYS_ADS_SRB1
+            bool "Common reference on SRB1 (MISC1.SRB1 = 1)"
+            default y
+            help
+                Connects SRB1 to every channel's negative input (single-ended montage,
+                reference electrode on the SRB1 pin). Disable for true differential inputs.
+                MUST match the PCB.
+
+        config SYNAPSYS_ADS_SRB2
+            bool "Route SRB2 to positive inputs of used channels (CHnSET.SRB2 = 1)"
+            default n
+
+        config SYNAPSYS_ADS_BIAS
+            bool "Enable BIAS drive (CONFIG3 = 0xEC, BIAS_SENSP/N on used channels)"
+            default n
+            help
+                Powers the bias buffer with internal BIASREF and derives the bias signal
+                from the used channels. Requires a bias electrode on the BIAS_OUT pin.
+
+        config SYNAPSYS_DRDY_TIMEOUT_MS
+            int "DRDY timeout (ms) counted as an error"
+            range 10 1000
+            default 100
+    endmenu
+
+    menu "Tasks and buffering"
+        config SYNAPSYS_SAMPLE_QUEUE_LEN
+            int "Sample queue length (samples; >= 500 = 2 s)"
+            range 500 8192
+            default 1024
+
+        config SYNAPSYS_EVENT_QUEUE_LEN
+            int "Output event queue length"
+            range 4 256
+            default 32
+
+        config SYNAPSYS_ACQ_TASK_PRIO
+            int "Acquisition / replay task priority (core 1)"
+            range 1 24
+            default 20
+
+        config SYNAPSYS_DECODER_TASK_PRIO
+            int "Decoder task priority (core 0)"
+            range 1 24
+            default 10
+
+        config SYNAPSYS_OUTPUT_TASK_PRIO
+            int "Output (serial/BLE) task priority (core 0)"
+            range 1 24
+            default 5
+    endmenu
+
+    menu "Decoder"
+        config SYNAPSYS_HOP_SAMPLES
+            int "Decision hop (samples)"
+            range 1 625
+            default 125
+            help
+                Overrides config_synapsys_v1().hop_samples. The replay self-check expects 125.
+
+        config SYNAPSYS_CONF_THRESHOLD_EN
+            bool "Enable confidence threshold T (uncalibrated: keep off)"
+            default n
+        config SYNAPSYS_CONF_THRESHOLD
+            string "Confidence threshold T (0..1, decimal string)"
+            depends on SYNAPSYS_CONF_THRESHOLD_EN
+            default "0.30"
+
+        config SYNAPSYS_MARGIN_THRESHOLD_EN
+            bool "Enable margin threshold M (uncalibrated: keep off)"
+            default n
+        config SYNAPSYS_MARGIN_THRESHOLD
+            string "Margin threshold M (>= 0, decimal string)"
+            depends on SYNAPSYS_MARGIN_THRESHOLD_EN
+            default "0.05"
+
+        config SYNAPSYS_REARM_CONFIRM
+            int "Re-arm: confirmations K before emitting"
+            range 1 20
+            default 2
+        config SYNAPSYS_REARM_REFRACTORY
+            int "Re-arm: refractory period after emit (samples)"
+            range 0 100000
+            default 625
+        config SYNAPSYS_REARM_RELEASE
+            int "Re-arm: release count N (REJECT / other label) before re-arming"
+            range 0 20
+            default 2
+    endmenu
+
+    menu "Output"
+        config SYNAPSYS_PRINT_DECISIONS
+            bool "Print one JSON line per decision point"
+            default y
+
+        config SYNAPSYS_HEALTH_PERIOD_MS
+            int "Health line period (ms, 0 = off)"
+            range 0 600000
+            default 5000
+
+        config SYNAPSYS_TIMING_EVERY
+            int "Print decoder timing min/avg/max every N decisions (0 = off)"
+            range 0 10000
+            default 20
+
+        config SYNAPSYS_LED_GPIO
+            int "Status LED GPIO (plain on/off LED; -1 = disabled)"
+            range -1 48
+            default -1
+            help
+                A plain LED toggles at each decision point and stays on ~300 ms after each
+                emitted command. The DevKitC-1 RGB LED (GPIO 48) is addressable and NOT
+                supported here; leave -1.
+
+        config SYNAPSYS_BLE_ENABLE
+            bool "BLE GATT output (NimBLE peripheral)"
+            depends on BT_NIMBLE_ENABLED
+            default y
+
+        config SYNAPSYS_BLE_NAME
+            string "BLE advertised name"
+            depends on SYNAPSYS_BLE_ENABLE
+            default "SynapSys"
+
+        config SYNAPSYS_BLE_DEBUG
+            bool "Notify the Debug characteristic at every decision point"
+            depends on SYNAPSYS_BLE_ENABLE
+            default y
+    endmenu
+
+endmenu

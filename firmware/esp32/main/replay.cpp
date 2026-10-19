@@ -6,7 +6,6 @@
 #include <cstring>
 
 #include "esp_log.h"
-#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "generated/fixtures_embedded.hpp"
@@ -25,7 +24,6 @@ static_assert(fixtures::kWindowSamples == synapsys::kWindow, "fixture window mis
 
 app::Context s_ctx;
 TaskHandle_t s_task = nullptr;
-esp_timer_handle_t s_timer = nullptr;
 
 // Per-stream / per-pass self-check counters (decoder task only).
 struct Counts {
@@ -35,9 +33,10 @@ uint32_t s_seen[fixtures::kNumFixtures] = {};
 Counts s_stream[fixtures::kNumFixtures];
 Counts s_pass_counts;
 
-void timer_cb(void* /*arg*/) {
-  if (s_task != nullptr) xTaskNotifyGive(s_task);
-}
+// Real-time pacing with the FreeRTOS tick (CONFIG_FREERTOS_HZ = 1000 -> 4 ticks = 250 Hz).
+// xTaskDelayUntil keeps an absolute schedule, so the average rate is exact.
+static_assert(configTICK_RATE_HZ % 250 == 0, "replay pacing needs a tick rate divisible by 250 Hz");
+constexpr TickType_t kSamplePeriodTicks = configTICK_RATE_HZ / 250;
 
 void replay_task(void* /*arg*/) {
   app::SourceStats* st = s_ctx.source;
@@ -51,19 +50,10 @@ void replay_task(void* /*arg*/) {
 #else
   const bool loop = false;
 #endif
-  if (realtime) {
-    const uint64_t period_us = static_cast<uint64_t>(1e6 / fixtures::kSampleRateHz + 0.5);
-    if (esp_timer_start_periodic(s_timer, period_us) != ESP_OK) {
-      ESP_LOGE(kTag, "esp_timer_start_periodic failed");
-      st->failed.store(true);
-      vTaskDelete(nullptr);
-      return;
-    }
-  }
   st->running.store(true);
 
   uint32_t seq = 0;
-  uint32_t credits = 0;
+  TickType_t last_wake = xTaskGetTickCount();
   for (uint16_t pass = 0;; ++pass) {
     ESP_LOGI(kTag, "pass %u: %d fixtures, %s", static_cast<unsigned>(pass),
              fixtures::kNumFixtures, realtime ? "real time (250 Hz)" : "as fast as possible");
@@ -83,8 +73,7 @@ void replay_task(void* /*arg*/) {
         s.stream = static_cast<uint8_t>(f);
         s.pass = pass;
         if (realtime) {
-          if (credits == 0) credits = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-          if (credits > 0) --credits;
+          xTaskDelayUntil(&last_wake, kSamplePeriodTicks);
           // Stream/pass markers must never be lost; plain samples may drop (counted).
           const TickType_t wait = (s.flags != 0) ? portMAX_DELAY : 0;
           if (xQueueSend(s_ctx.samples, &s, wait) == pdTRUE) {
@@ -102,12 +91,11 @@ void replay_task(void* /*arg*/) {
     }
     if (!loop) break;
     vTaskDelay(pdMS_TO_TICKS(CONFIG_SYNAPSYS_REPLAY_PAUSE_MS));
-    ulTaskNotifyTake(pdTRUE, 0);  // drop timer ticks accumulated during the pause
-    credits = 0;
+    last_wake = xTaskGetTickCount();  // restart the schedule after the pause
   }
-  if (realtime) esp_timer_stop(s_timer);
   st->running.store(false);
   ESP_LOGI(kTag, "replay finished (loop disabled); idling");
+  app::g_source_task = nullptr;  // health reporter must not touch a deleted task's stack
   vTaskDelete(nullptr);
 }
 
@@ -145,15 +133,6 @@ bool start(const app::Context& ctx) {
              fixtures::kFixtures[f].true_label ? fixtures::kFixtures[f].true_label : "none");
   }
 
-  esp_timer_create_args_t targs = {};
-  targs.callback = &timer_cb;
-  targs.arg = nullptr;
-  targs.dispatch_method = ESP_TIMER_TASK;
-  targs.name = "replay250";
-  if (esp_timer_create(&targs, &s_timer) != ESP_OK) {
-    ESP_LOGE(kTag, "esp_timer_create failed");
-    return false;
-  }
   const BaseType_t rc = xTaskCreatePinnedToCore(replay_task, "replay", 4096, nullptr,
                                                 CONFIG_SYNAPSYS_ACQ_TASK_PRIO, &s_task, 1);
   app::g_source_task = s_task;

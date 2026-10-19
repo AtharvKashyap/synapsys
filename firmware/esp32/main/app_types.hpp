@@ -99,7 +99,8 @@ struct Context {
 };
 
 // Task handles for stack high-water reporting (set once at task creation, read-only after).
-inline TaskHandle_t g_source_task = nullptr;
+// Atomic: the source task may delete itself (replay end) while the output task reads it.
+inline std::atomic<TaskHandle_t> g_source_task{nullptr};
 inline TaskHandle_t g_decoder_task = nullptr;
 inline TaskHandle_t g_output_task = nullptr;
 

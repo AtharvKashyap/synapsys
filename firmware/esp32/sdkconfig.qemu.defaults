@@ -1,0 +1,5 @@
+# QEMU run: no radio emulation, UART console, run the replay once and stop.
+CONFIG_BT_ENABLED=n
+CONFIG_SYNAPSYS_BLE_ENABLE=n
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_SYNAPSYS_REPLAY_LOOP=n

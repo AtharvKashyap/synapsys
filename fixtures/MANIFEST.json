@@ -1,7 +1,7 @@
 {
  "format_version": 1,
  "generator": "scripts/make_fixtures.py",
- "git_revision": "0959be1ac8370eb4022482b259eb8d0e8f991cfd-dirty",
+ "git_revision": "668f78ba42c7a5a38818c1811fc46369431433a4-dirty",
  "seed": 20261018,
  "files": {
   "config/benchmark_v1.json": "1a124e7d48e23f22d9272d8d41b8e592687ac8802deb636370406131034a9c59",

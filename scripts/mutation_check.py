@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-COPY = ("src", "tests", "configs", "scripts", "pyproject.toml")
+COPY = ("src", "tests", "configs", "scripts", "fixtures", "pyproject.toml")
 
 
 @dataclass(frozen=True)

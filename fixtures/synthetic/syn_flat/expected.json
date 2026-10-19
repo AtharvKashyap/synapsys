@@ -1,0 +1,125 @@
+{
+ "id": "syn_flat",
+ "format_version": 1,
+ "units": "V",
+ "channels": [
+  "O1",
+  "Oz",
+  "O2",
+  "POz"
+ ],
+ "n_samples": 1500,
+ "source": "synthetic",
+ "seed": 20261018,
+ "description": "constant input: every decision point must report DegenerateSignalError (C++: explicit error, never NaN)",
+ "true_label": null,
+ "true_frequency": null,
+ "results": {
+  "synapsys_v1": {
+   "filtered_file": "filtered_synapsys_v1.csv",
+   "decision_points": [
+    {
+     "window_start_sample": 0,
+     "window_end_sample": 625,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 125,
+     "window_end_sample": 750,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 250,
+     "window_end_sample": 875,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 375,
+     "window_end_sample": 1000,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 500,
+     "window_end_sample": 1125,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 625,
+     "window_end_sample": 1250,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 750,
+     "window_end_sample": 1375,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 875,
+     "window_end_sample": 1500,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    }
+   ]
+  },
+  "benchmark_v1": {
+   "filtered_file": "filtered_benchmark_v1.csv",
+   "decision_points": [
+    {
+     "window_start_sample": 0,
+     "window_end_sample": 625,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 125,
+     "window_end_sample": 750,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 250,
+     "window_end_sample": 875,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 375,
+     "window_end_sample": 1000,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 500,
+     "window_end_sample": 1125,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 625,
+     "window_end_sample": 1250,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 750,
+     "window_end_sample": 1375,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    },
+    {
+     "window_start_sample": 875,
+     "window_end_sample": 1500,
+     "error": "DegenerateSignalError",
+     "message": "x has zero rank after centering (constant rows?)"
+    }
+   ]
+  }
+ }
+}

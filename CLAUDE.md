@@ -14,6 +14,7 @@ Sibling repo `../synapsys-stimulus` is the PsychoPy stimulus renderer — keep t
 .venv/bin/python scripts/run_benchmark_validation.py      # M7/M8, needs data/benchmark/
 .venv/bin/python scripts/fetch_benchmark.py 1 2 3            # Wang data -> data/benchmark/ (needs .[data])
 .venv/bin/python scripts/benchmark_walkthrough.py         # 7-stage real-EEG check + viewer page
+.venv/bin/python scripts/make_fixtures.py               # regenerate fixtures/ (Python->C++ regression set)
 .venv/bin/python scripts/mutation_check.py                # plant 11 bugs, confirm tests catch each (~1 min)
 .venv/bin/python scripts/make_report_artifacts.py --out docs/report   # all weekly-report evidence
 ```
@@ -23,6 +24,12 @@ macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applie
 - Targets: YES 60/7≈8.571 Hz, NO 12 Hz, HELP 15 Hz (60 Hz display; 7/5/4 frames/cycle)
 - fs 250 Hz; channels O1, Oz, O2, POz; window 2.0–3.0 s (default 2.5); harmonics 2
 - Requirements: ≥85 % held-out own-system accuracy, ≤5 s end-to-end latency
+
+## Frozen reference v1 (tag `python-ref-v1`, see docs/reference_v1.md)
+- The Python decoder is FROZEN as the reference for the ESP32 port. `tests/test_frozen_reference.py` pins the settings, SOS coefficients and every fixture output. Changing behaviour = deliberate v2 bump + regenerate fixtures + record evidence. Never change algorithm and language at the same time.
+- `fixtures/`: synthetic fixtures committed; `fixtures/wang/` generated locally (dataset redistribution terms unstated) and verified via `MANIFEST.json` hashes.
+- The C++ must port the Björck–Golub SVD/QR CCA (no covariance inversion, no regularisation). References restart at t=0 each window (constant tables).
+- `firmware/`: ESP32/C++ work. Follow `firmware/PLAN.md` phase gates.
 
 ## Conventions (do not change silently)
 - EEG arrays: `(n_channels, n_samples)`, float64, **volts**. Select channels by name.
@@ -52,4 +59,4 @@ Scripts: `run_synthetic_validation.py` (M6), `run_benchmark_validation.py` (M7�
 `docs/validation.md`.
 
 ## Milestone status
-See README "Status" (M1–M7 done; M8 sweeps run on S1–S3 (2026-10-18), baseline choice to document; S1–S3 downloaded). Scope agreed so far: Python milestones M1–M8; ESP32 port (M9+) deferred.
+See README "Status" (M1–M7 done; M8 sweeps run on S1–S3 (2026-10-18), baseline choice to document; S1–S3 downloaded). Python reference frozen 2026-10-18; ESP32 port (M9+) planned in firmware/PLAN.md, awaiting approval.

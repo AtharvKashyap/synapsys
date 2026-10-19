@@ -1,0 +1,174 @@
+{
+ "name": "synapsys_v1",
+ "format_version": 1,
+ "sample_rate_hz": 250.0,
+ "channels": [
+  "O1",
+  "Oz",
+  "O2",
+  "POz"
+ ],
+ "targets": [
+  {
+   "label": "YES",
+   "frequency_hz": 8.5714285714
+  },
+  {
+   "label": "NO",
+   "frequency_hz": 12.0
+  },
+  {
+   "label": "HELP",
+   "frequency_hz": 15.0
+  }
+ ],
+ "harmonics": 2,
+ "window_samples": 625,
+ "reference_rows": "sin(2*pi*h*f*t), cos(2*pi*h*f*t) for h = 1..H; t = n/fs, n = 0..window_samples-1 (restarts at 0 in every window)",
+ "reference_checks": {
+  "YES": {
+   "row_sums": [
+    8.573239524906915,
+    2.956785977967937,
+    1.251239323434557,
+    -1.5982252243615958
+   ],
+   "last_column": [
+    0.6164470769122948,
+    -0.7873963432517879,
+    -0.9707763483379891,
+    0.23998600273257453
+   ]
+  },
+  "NO": {
+   "row_sums": [
+    3.241851231905457e-14,
+    -9.237055564881302e-14,
+    9.414691248821327e-14,
+    1.509903313490213e-13
+   ],
+   "last_column": [
+    -0.2970415815770376,
+    0.9548645447466422,
+    -0.5672689491267611,
+    0.8235325976284242
+   ]
+  },
+  "HELP": {
+   "row_sums": [
+    5.2421835811132045,
+    1.000000000000139,
+    6.128431095930864e-14,
+    -6.616929226765933e-14
+   ],
+   "last_column": [
+    0.3681245526847076,
+    -0.9297764858882397,
+    -0.6845471059287352,
+    0.7289686274213678
+   ]
+  }
+ },
+ "preprocessing": {
+  "remove_dc": true,
+  "bandpass_low_hz": 0.5,
+  "bandpass_high_hz": 45.0,
+  "bandpass_order": 4,
+  "notch_hz": 60.0,
+  "notch_q": 30.0,
+  "mode": "causal",
+  "dc_policy": "subtract each channel's first sample, then filter from zero state",
+  "sos_layout": "rows [b0, b1, b2, a0, a1, a2], a0 = 1, applied in order (direct form II transposed, scipy.signal.sosfilt)",
+  "sos": [
+   [
+    0.0321842739559906,
+    0.0643685479119812,
+    0.0321842739559906,
+    1.0,
+    -0.481231682622041,
+    0.094533933393809
+   ],
+   [
+    1.0,
+    2.0,
+    1.0,
+    1.0,
+    -0.6389214218509089,
+    0.49253570867042284
+   ],
+   [
+    1.0,
+    -2.0,
+    1.0,
+    1.0,
+    -1.9765653376424923,
+    0.9767268380747811
+   ],
+   [
+    1.0,
+    -2.0,
+    1.0,
+    1.0,
+    -1.9904050038312977,
+    0.9905630563187575
+   ],
+   [
+    0.975478390750534,
+    -0.12250158988968947,
+    0.9754783907505347,
+    1.0,
+    -0.12250158988968946,
+    0.9509567815010682
+   ]
+  ]
+ },
+ "cca": {
+  "method": "Bjorck-Golub principal angles: centre rows; orthonormal basis of each side from thin SVD, keep singular values > rank_tol * s_max; side is degenerate if s_max <= rank_tol * sqrt(n) * max|raw|; canonical correlations = singular values of Qx^T Qy, sorted, clipped to [0, 1]",
+  "rank_tol": 1e-10,
+  "min_samples_rule": "n_samples > n_channels + 2 * harmonics",
+  "no_regularization": true
+ },
+ "decision": {
+  "winner": "max score; ties -> first target in config order",
+  "margin": "winner score - runner-up score",
+  "gating": "accept iff (T unset or score >= T) and (M unset or margin >= M)",
+  "test_only_thresholds": [
+   [
+    0.2,
+    0.02
+   ],
+   [
+    0.2,
+    0.05
+   ],
+   [
+    0.2,
+    0.1
+   ],
+   [
+    0.3,
+    0.02
+   ],
+   [
+    0.3,
+    0.05
+   ],
+   [
+    0.3,
+    0.1
+   ],
+   [
+    0.4,
+    0.02
+   ],
+   [
+    0.4,
+    0.05
+   ],
+   [
+    0.4,
+    0.1
+   ]
+  ]
+ }
+}

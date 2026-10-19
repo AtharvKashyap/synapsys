@@ -14,3 +14,6 @@ data/*
 # Generated run outputs; commit selected figures deliberately via `git add -f`.
 results/*
 !results/.gitkeep
+
+# Wang-derived fixtures: generated locally (dataset redistribution terms unstated)
+fixtures/wang/

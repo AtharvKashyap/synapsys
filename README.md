@@ -137,7 +137,7 @@ table, filter response, PSD before/after, accuracy vs SNR, mutation report) to i
 | M6 | Synthetic end-to-end: noise/interference, SNR sweep, plots | Done |
 | M7 | Public dataset: Wang Benchmark loader + 3-frequency smoke test | Done on S1–S3: 96.3 % causal / 98.1 % zero-phase, 54 trials, chance 33 % |
 | M8 | Window / harmonic / channel experiments | Run on S1–S3 (see docs/validation.md); baseline config choice still to be documented |
-| M9 | Embedded design: causal DSP + CCA in C/C++ | Not started (deferred until Python reference is validated) |
+| M9 | Embedded design: causal DSP + CCA in C/C++ | Reference frozen (`python-ref-v1`), fixtures generated, plan in `firmware/PLAN.md` |
 | M10 | Cross-platform regression: Python vs ESP32 fixtures | Not started |
 | M11 | Hardware integration: acquisition, alpha, SSVEP, calibration, held-out test | Not started |
 

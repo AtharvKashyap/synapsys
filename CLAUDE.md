@@ -15,7 +15,10 @@ Sibling repo `../synapsys-stimulus` is the PsychoPy stimulus renderer — keep t
 .venv/bin/python scripts/fetch_benchmark.py 1 2 3            # Wang data -> data/benchmark/ (needs .[data])
 .venv/bin/python scripts/benchmark_walkthrough.py         # 7-stage real-EEG check + viewer page
 .venv/bin/python scripts/make_fixtures.py               # regenerate fixtures/ (Python->C++ regression set)
-.venv/bin/python scripts/mutation_check.py                # plant 11 bugs, confirm tests catch each (~1 min)
+.venv/bin/python scripts/mutation_check.py
+cmake -S firmware/decoder -B firmware/decoder/build -G Ninja && cmake --build firmware/decoder/build && ctest --test-dir firmware/decoder/build   # C++ core vs fixtures
+. ~/esp/esp-idf/export.sh && cd firmware/esp32 && idf.py build flash monitor   # ESP-IDF v5.3.2
+firmware/tools/run_qemu.sh                                 # real firmware in QEMU, no board (exit 0 = PASS)                # plant 11 bugs, confirm tests catch each (~1 min)
 .venv/bin/python scripts/make_report_artifacts.py --out docs/report   # all weekly-report evidence
 ```
 macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applies the `hidden` flag to files in dot-dirs; Python 3.13 then skips the editable-install `.pth` (`ModuleNotFoundError: synapsys_decoder`). So the venv lives at `~/.venvs/synapsys-decoder` and `.venv` is a symlink to it (recreate: `python3 -m venv ~/.venvs/synapsys-decoder && ln -s ~/.venvs/synapsys-decoder .venv`). pytest also sets `pythonpath = ["src"]`.
@@ -59,4 +62,5 @@ Scripts: `run_synthetic_validation.py` (M6), `run_benchmark_validation.py` (M7�
 `docs/validation.md`.
 
 ## Milestone status
-See README "Status" (M1–M7 done; M8 sweeps run on S1–S3 (2026-10-18), baseline choice to document; S1–S3 downloaded). Python reference frozen 2026-10-18; ESP32 port (M9+) planned in firmware/PLAN.md, awaiting approval.
+See README "Status" (M1–M7 done; M8 sweeps run on S1–S3 (2026-10-18), baseline choice to document; S1–S3 downloaded). Python reference frozen 2026-10-18. ESP32 port: phases 0-5 done (host equivalence + QEMU replay 48/48); phase 6 hardware (ADS1299/BLE on a real board) pending. Disk on this Mac is nearly full (~3 GB free): keep one ESP-IDF build dir.
+- Feed the decoder with `push_f64` (DC removal before float rounding); on ESP32-S3 the 16 KB 'IRAM 99.99%' line in idf.py size is normal (overflow goes to DIRAM).

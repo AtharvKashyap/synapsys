@@ -1,6 +1,17 @@
 # ESP32-S3 decoder port: plan of action
 
-Status: **draft for approval** (2026-10-18). Nothing in `firmware/` is implemented yet.
+Status (2026-10-19): **phases 0-5 done**, phase 6 code written, needs a physical board.
+
+| Phase | Status | Evidence |
+|---|---|---|
+| 0 Scaffolding | done | CMake host build, generated config header + byte-exact drift check |
+| 1 Filter | done | double bit-exact; float 8.6e-4 x RMS (gate 1e-3) via `push_f64` |
+| 2 CCA | done | score err double 1.3e-15, float 9.0e-5; degenerate points exact |
+| 3 Decision | done | winner/decisions 100 % on 340 points; 36 near-threshold points listed, none differ |
+| 4 Re-arm | done | Python reference + C++ port identical on 140 sequences / 5800 steps |
+| 5 ESP-IDF + playback | done in QEMU | real firmware, real-time 250 Hz replay, 48/48 PASS; physical board pending |
+| 6 ADS1299 + BLE | code written, builds | needs PCB/board: register read-back, DRDY 250 Hz, BLE notify, 30 min soak |
+
 
 ## 0. Goal and scope
 

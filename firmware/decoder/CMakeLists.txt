@@ -5,7 +5,7 @@
 #    builds the library in float (default) and double (SYNAPSYS_REAL_DOUBLE) and runs the
 #    unit tests + fixture-equivalence runner for both.
 if(ESP_PLATFORM)
-  idf_component_register(SRCS "src/decoder.cpp"
+  idf_component_register(SRCS "src/decoder.cpp" "src/rearm.cpp"
                          INCLUDE_DIRS "include"
                          PRIV_INCLUDE_DIRS "src")
   target_compile_options(${COMPONENT_LIB} PRIVATE -Wall -Wextra -Werror)
@@ -56,7 +56,7 @@ else()
            COMMAND "${SYNAPSYS_PYTHON}" "${SYNAPSYS_TOOLS}/gen_config.py" --check)
 
   foreach(prec float double)
-    add_library(synapsys_decoder_${prec} STATIC src/decoder.cpp)
+    add_library(synapsys_decoder_${prec} STATIC src/decoder.cpp src/rearm.cpp)
     target_include_directories(synapsys_decoder_${prec} PUBLIC include PRIVATE src)
     target_compile_options(synapsys_decoder_${prec} PRIVATE ${SYNAPSYS_FLAGS})
     if(prec STREQUAL "double")
@@ -89,6 +89,11 @@ else()
                    --rev "${SYNAPSYS_GIT_REV}"
                    --input real)
   add_library(synapsys_decoder ALIAS synapsys_decoder_float)
+
+  add_executable(test_rearm tests/test_rearm.cpp)
+  target_link_libraries(test_rearm PRIVATE synapsys_decoder_float)
+  target_compile_options(test_rearm PRIVATE ${SYNAPSYS_FLAGS})
+  add_test(NAME rearm_vs_python COMMAND test_rearm "${SYNAPSYS_FIXTURES}/rearm/sequences.csv")
 
   add_executable(bench_float tests/bench.cpp)
   target_link_libraries(bench_float PRIVATE synapsys_decoder_float)

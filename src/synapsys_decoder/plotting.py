@@ -454,3 +454,111 @@ def plot_table(
     if title:
         fig.text(0.5, 1 - 0.2 / height_in, title, ha="center", va="center", fontsize=11, color=INK)
     return fig
+
+
+def plot_timeseries(
+    eeg: np.ndarray,
+    fs: float,
+    channel_names: Sequence[str],
+    *,
+    markers: Mapping[str, float] | None = None,
+    shade: tuple[float, float] | None = None,
+    shade_label: str = "analysis window",
+    title: str = "EEG",
+    ax: Axes | None = None,
+) -> Figure:
+    """Stacked per-channel traces (µV) with optional time markers and a shaded window."""
+    fig, ax = _get_ax(ax, (9, 0.8 + 0.75 * len(channel_names)))
+    t = np.arange(eeg.shape[1]) / fs
+    uv = eeg * 1e6
+    spacing = 4 * float(np.median(np.std(uv, axis=1))) or 1.0
+    for i, name in enumerate(channel_names):
+        off = -i * spacing
+        ax.plot(t, uv[i] - np.mean(uv[i]) + off, color=PALETTE[i % len(PALETTE)], lw=0.8)
+        ax.text(
+            -0.01,
+            off,
+            name,
+            transform=ax.get_yaxis_transform(),
+            ha="right",
+            va="center",
+            fontsize=9,
+            color=INK,
+        )
+    if shade is not None:
+        ax.axvspan(*shade, color=PALETTE[1], alpha=0.12, lw=0)
+        ax.text(
+            (shade[0] + shade[1]) / 2,
+            1.0,
+            shade_label,
+            transform=ax.get_xaxis_transform(),
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color=MUTED,
+        )
+    for name, x in (markers or {}).items():
+        ax.axvline(x, color=MUTED, lw=1, ls="--")
+        ax.text(
+            x,
+            1.0,
+            f" {name}",
+            transform=ax.get_xaxis_transform(),
+            ha="left",
+            va="bottom",
+            fontsize=8,
+            color=MUTED,
+        )
+    ax.set_yticks([])
+    ax.set_xlim(t[0], t[-1])
+    ax.set_xlabel("Time (s)")
+    ax.set_title(title, fontsize=11, pad=14)
+    ax.text(
+        1.0,
+        -0.12,
+        f"trace spacing {spacing:.0f} µV",
+        transform=ax.transAxes,
+        ha="right",
+        fontsize=8,
+        color=MUTED,
+    )
+    _style(ax, grid_axis="x")
+    ax.spines["left"].set_visible(False)
+    return fig
+
+
+def plot_spectra(
+    freqs_hz: np.ndarray,
+    spectra: Mapping[str, np.ndarray],
+    *,
+    mark_frequencies: Mapping[str, float] | None = None,
+    harmonics: int = 2,
+    fmax: float = 40.0,
+    ylabel: str = "PSD (V²/Hz)",
+    title: str = "Spectra",
+    ax: Axes | None = None,
+) -> Figure:
+    """One line per named spectrum (e.g. trial-averaged PSD per presented frequency)."""
+    fig, ax = _get_ax(ax, (8, 4))
+    sel = freqs_hz <= fmax
+    for i, (name, p) in enumerate(spectra.items()):
+        ax.semilogy(
+            freqs_hz[sel], np.asarray(p)[sel], color=PALETTE[i % len(PALETTE)], lw=1.6, label=name
+        )
+    for i, (_name, f) in enumerate((mark_frequencies or {}).items()):
+        for h in range(1, harmonics + 1):
+            if f * h <= fmax:
+                ax.axvline(
+                    f * h,
+                    color=PALETTE[i % len(PALETTE)],
+                    lw=0.9,
+                    ls="--" if h == 1 else ":",
+                    alpha=0.7,
+                )
+    ax.set_xlabel("Frequency (Hz)")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title, fontsize=11)
+    if len(spectra) >= 2:
+        ax.legend(frameon=False, fontsize=9)
+    _style(ax, grid_axis="both")
+    return fig

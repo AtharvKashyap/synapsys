@@ -74,3 +74,23 @@ def test_missing_data_exits_with_hint(tmp_path):
         sys.path.pop(0)
     with pytest.raises(SystemExit, match=r"data/README\.md"):
         script.main(["--data-dir", str(tmp_path), "--results-root", str(tmp_path / "r")])
+
+
+def test_walkthrough_runs_all_stages_on_fake_data(fake_benchmark, tmp_path):
+    sys.path.insert(0, str(ROOT / "scripts"))
+    try:
+        import benchmark_walkthrough as wt
+    finally:
+        sys.path.pop(0)
+    out = tmp_path / "walk"
+    rc = wt.main(["--data-dir", str(fake_benchmark), "--subjects", "1", "--out", str(out)])
+    status = json.loads((out / "status.json").read_text())
+    assert status["finished"] is True
+    assert [s["status"] for s in status["stages"]] == ["pass"] * 7, [
+        (s["id"], [c for c in s["checks"] if c["ok"] is False]) for s in status["stages"]
+    ]
+    assert rc == 0
+    assert (out / "index.html").exists()
+    for s in status["stages"]:
+        for f in s["figures"]:
+            assert (out / f["src"]).exists()

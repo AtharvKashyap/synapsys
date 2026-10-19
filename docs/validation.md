@@ -92,7 +92,45 @@ Confusion matrix, causal, SNR -20 dB (rows true YES/NO/HELP, columns predicted Y
 
   Qualitatively: genuine targets have the highest median confidence and margin; pure noise and off-target windows have lower confidence and a small margin; the ambiguous mixture has a confidence close to genuine targets but a margin much closer to the noise cases, i.e. margin gating is what separates it. The distributions overlap substantially (see `score_distributions.png`, `gating_scatter.png`), so any rejection rule will trade false accepts against false rejects. **No threshold was chosen from these data**, and none of these medians are to be used as thresholds: SNR here is arbitrary, the noise is white, and the human distributions will differ.
 
-## 3. Public benchmark plan (M7-M8)
+## 3. Public benchmark results (M7–M8, S1–S3, run 2026-10-18)
+
+Produced by `scripts/benchmark_walkthrough.py` (figures and `status.json` in
+`figures/benchmark/`). Configuration: `configs/benchmark.yaml` (8.0/12.0/15.0 Hz,
+O1/Oz/O2/POz, 2.5 s window from 0.64 s = onset + 0.14 s latency, 2 harmonics, 0.5–45 Hz,
+no notch). 54 trials (3 subjects x 3 frequencies x 6 blocks). S1–S3 belong to the dataset's
+*experienced* group (S1–S8).
+
+| Stage | Result |
+|---|---|
+| Data | S1–S3 present; 8/12/15 Hz exist; 8.571 Hz request refused (guardrail) |
+| Load | 54 epochs, (9, 1500), 250 Hz, finite, median channel SD 12.7 µV |
+| SSVEP in raw EEG (Oz, trial-averaged) | narrowband SNR 8.8 / 9.2 / 10.1 dB at 8 / 12 / 15 Hz, harmonics visible |
+| Causal filtering | injected 0.2 Hz drift + offset cut 23.4 dB in the window (zero-phase 35.5 dB); 12 Hz changed 0.02 dB |
+| Example trial S1-b0-t4 (12 Hz) | ρ = 0.193 / 0.625 / 0.085 → 12 Hz, correct |
+| All trials | causal 52/54 = 96.3 % (p = 1e-22 vs chance), zero-phase 53/54 = 98.1 % |
+
+Sweeps (accuracy, causal unless stated; 54 trials per point, one trial = 1.9 %):
+
+| Window (s) | 1.0 | 1.5 | 2.0 | 2.5 | 3.0 |
+|---|---|---|---|---|---|
+| causal, 4 ch, 2 harmonics | 85.2 % | 90.7 % | 90.7 % | 96.3 % | 96.3 % |
+| zero-phase | 87.0 % | 92.6 % | 94.4 % | 98.1 % | 98.1 % |
+| 9 occipital channels | 90.7 % | 94.4 % | 98.1 % | 100 % | 100 % |
+| 1 harmonic | 87.0 % | 87.0 % | 90.7 % | 90.7 % | 92.6 % |
+| 3 harmonics | 83.3 % | 88.9 % | 88.9 % | 96.3 % | 96.3 % |
+
+Reading: accuracy rises with window length and plateaus at 2.5 s; 9 channels beat 4 by a few
+points (cost of the low-channel montage); 2 harmonics beat 1 at ≥ 2.5 s and 3 adds nothing.
+With 3 subjects and 54 trials these are indications, not established differences. The causal
+filter costs ~2 points versus zero-phase here, consistent with its short (0.64 s) settling time
+in benchmark epochs; the device filters continuously, so this gap should not apply on-device.
+
+Debugging note: a first-version check required > 10 dB power reduction below 0.5 Hz and failed
+(−6 dB). Diagnosis: a 4.9 s segment has 0.2 Hz bins, so "below 0.5 Hz" is three bins and is
+dominated by the 0.4 Hz bin inside the filter's transition band (design −8.5 dB). The check was
+replaced by an injected-drift linearity test; the threshold was fixed before measuring.
+
+## 4. Public benchmark method (M7-M8)
 
 Script: `scripts/run_benchmark_validation.py --config configs/benchmark.yaml`. Requires `data/benchmark/` (see [../data/README.md](../data/README.md)); not run yet, no benchmark results exist.
 
@@ -117,7 +155,7 @@ Script: `scripts/run_benchmark_validation.py --config configs/benchmark.yaml`. R
 
 Interpretation limits: different hardware, electrodes, montage, stimulus display, subjects and population; the result supports "the CCA implementation works", nothing more.
 
-## 4. Threshold calibration plan
+## 5. Threshold calibration plan
 
 Applies to own-system data only. Thresholds stay `null` until this is done.
 
@@ -135,7 +173,7 @@ Applies to own-system data only. Thresholds stay `null` until this is done.
 
 Gating can always raise accepted accuracy by rejecting more; total accuracy is the stricter and the primary number, with the rejection rate reported next to accepted accuracy. Also available: per-class accuracy, confusion matrix with a REJECT column, Wolpaw ITR (`itr_bits_per_min`) and `false_activation_rate` on rest windows. Latency is reported with the window length used (<= 5 s end to end).
 
-## 5. Own-hardware validation progression
+## 6. Own-hardware validation progression
 
 Each step gates the next. Recordings use the CSV + JSON sidecar format (`io/csv_eeg.py`); `scripts/analyze_recording.py` gives the PSD before/after filtering and sliding-window CCA scores for each.
 
@@ -146,7 +184,7 @@ Each step gates the next. Recordings use the CSV + JSON sidecar format (`io/csv_
 
 Any claim about the 85 % requirement comes only from step 4 on the held-out set.
 
-## 6. Guardrails
+## 7. Guardrails
 
 - Standard CCA is not trained; never describe it as a model fit to data.
 - Thresholds stay `null` until calibrated on own-system development data; never invented, never tuned on the final test set, never chosen from synthetic data.

@@ -16,6 +16,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+data = [
+    "py7zr>=0.20,<2",  # extracts the Wang Benchmark .mat.7z archives
+]
 dev = [
     "pytest>=8,<10",
     "ruff>=0.9,<1",

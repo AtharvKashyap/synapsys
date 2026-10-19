@@ -78,3 +78,19 @@ def test_filter_response_and_table_smoke(tmp_path):
     assert save_figure(fig, tmp_path / "r.png").exists()
     fig = plot_table(["a", "b"], [["1", "2"], ["3", "4"]], title="t", highlight_rows=[1])
     assert save_figure(fig, tmp_path / "t.png").exists()
+
+
+def test_timeseries_and_spectra_smoke(tmp_path):
+    from synapsys_decoder.plotting import plot_spectra, plot_timeseries, save_figure
+
+    rng = np.random.default_rng(0)
+    eeg = rng.normal(0, 1e-5, (4, 500))
+    fig = plot_timeseries(
+        eeg, 250.0, ["a", "b", "c", "d"], markers={"onset": 0.5}, shade=(0.64, 1.64)
+    )
+    assert save_figure(fig, tmp_path / "ts.png").exists()
+    f = np.linspace(0, 125, 251)
+    fig = plot_spectra(
+        f, {"x": np.ones_like(f), "y": 2 * np.ones_like(f)}, mark_frequencies={"x": 8.0, "y": 12.0}
+    )
+    assert save_figure(fig, tmp_path / "sp.png").exists()

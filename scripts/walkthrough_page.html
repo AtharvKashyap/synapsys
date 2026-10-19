@@ -1,0 +1,250 @@
+<title>Benchmark Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: lab-notebook column; a signal-chain strip on top, then the seven checks in run order. */
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --ink: #16202a;
+  --muted: #5b6776;
+  --line: #dbe1e8;
+  --accent: #0d7480;
+  --accent-soft: #e2f1f2;
+  --pass: #1d7f47;
+  --pass-soft: #e3f3e9;
+  --fail: #b8322a;
+  --fail-soft: #fbe6e4;
+  --run: #a86a12;
+  --run-soft: #fbf0dc;
+  --idle: #8b95a3;
+  --idle-soft: #eef1f4;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1318; --surface: #151c23; --ink: #e5ebf1; --muted: #93a1b1; --line: #26313c;
+    --accent: #4cc0cb; --accent-soft: #12303a; --pass: #4fc27e; --pass-soft: #12301f;
+    --fail: #f07a6f; --fail-soft: #3a1714; --run: #e3a64a; --run-soft: #382a12;
+    --idle: #6f7b89; --idle-soft: #1c242d; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1318; --surface: #151c23; --ink: #e5ebf1; --muted: #93a1b1; --line: #26313c;
+  --accent: #4cc0cb; --accent-soft: #12303a; --pass: #4fc27e; --pass-soft: #12301f;
+  --fail: #f07a6f; --fail-soft: #3a1714; --run: #e3a64a; --run-soft: #382a12;
+  --idle: #6f7b89; --idle-soft: #1c242d; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.01em; }
+h2 { font-size: 22px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+header { display: grid; gap: 10px; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 500; }
+.note { font-size: 13.5px; color: var(--muted); border-left: 2px solid var(--line); padding-left: 12px; max-width: 75ch; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 12px; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.s-pass { color: var(--pass); background: var(--pass-soft); }
+.s-fail { color: var(--fail); background: var(--fail-soft); }
+.s-running { color: var(--run); background: var(--run-soft); }
+.s-running::before { animation: pulse 1.2s ease-in-out infinite; }
+.s-pending { color: var(--idle); background: var(--idle-soft); }
+@keyframes pulse { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .s-running::before { animation: none; } }
+.statusline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.track { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.track a { display: grid; gap: 6px; text-decoration: none; color: var(--muted); font-size: 12px; line-height: 1.25; min-width: 0; }
+.track a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.track .bar { height: 6px; border-radius: 3px; background: var(--idle-soft); }
+.track .t-pass .bar { background: var(--pass); }
+.track .t-fail .bar { background: var(--fail); }
+.track .t-running .bar { background: var(--run); }
+.track .t-running, .track .t-pass, .track .t-fail { color: var(--ink); }
+/* signal chain */
+.chain { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; }
+.chain-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+.blocks { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
+.block { position: relative; padding: 12px 14px; border: 1px solid var(--line); background: var(--bg); min-width: 0; display: grid; gap: 4px; align-content: start; }
+.block + .block { border-left: none; }
+.block:first-child { border-radius: 8px 0 0 8px; }
+.block:last-child { border-radius: 0 8px 8px 0; }
+.block:not(:last-child)::after { content: ""; position: absolute; right: -7px; top: 50%; width: 12px; height: 12px; background: var(--bg); border-top: 1px solid var(--line); border-right: 1px solid var(--line); transform: translateY(-50%) rotate(45deg); z-index: 1; }
+.block .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.block .v { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+.block .d { font-size: 12.5px; color: var(--muted); font-family: var(--font-mono); overflow-wrap: anywhere; }
+.scores { display: grid; gap: 3px; margin-top: 2px; }
+.score { display: grid; grid-template-columns: 52px 1fr 40px; gap: 6px; align-items: center; font-family: var(--font-mono); font-size: 11.5px; }
+.score .b { height: 6px; background: var(--idle-soft); border-radius: 3px; overflow: hidden; }
+.score .b i { display: block; height: 100%; background: var(--idle); }
+.score.win .b i { background: var(--accent); }
+.score.win { color: var(--ink); font-weight: 500; }
+.decision-ok { color: var(--pass); }
+.decision-bad { color: var(--fail); }
+/* headline */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; }
+.tile .n { font-family: var(--font-display); font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .l { font-size: 12.5px; color: var(--muted); }
+.tile.hero .n { color: var(--accent); }
+/* stages */
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; scroll-margin-top: 16px; }
+.stage.is-pending { opacity: 0.62; }
+.stage-head { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: start; }
+.num { font-family: var(--font-mono); font-size: 13px; color: var(--muted); padding-top: 4px; }
+.stage-head .q { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.summary { font-size: 15px; max-width: 75ch; }
+.checks-wrap { overflow-x: auto; }
+table.checks { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.checks td { padding: 7px 10px 7px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.checks td.ic { width: 46px; font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; }
+.checks td.lab { width: 34%; }
+.checks td.val { font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.checks .nt { display: block; font-family: var(--font-body); font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ok { color: var(--pass); } .bad { color: var(--fail); } .info { color: var(--muted); }
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+figure { margin: 0; display: grid; gap: 8px; align-content: start; min-width: 0; }
+figure img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: #ffffff; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 70ch; }
+.empty { color: var(--muted); font-size: 14px; }
+footer { font-size: 12.5px; color: var(--muted); display: grid; gap: 4px; }
+@media (max-width: 760px) {
+  .blocks { grid-template-columns: 1fr; }
+  .block + .block { border-left: 1px solid var(--line); border-top: none; }
+  .block:first-child { border-radius: 8px 8px 0 0; }
+  .block:last-child { border-radius: 0 0 8px 8px; }
+  .block:not(:last-child)::after { right: 50%; top: auto; bottom: -7px; transform: translateX(50%) rotate(135deg); }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .track { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .track a span { display: none; }
+  .stage-head { grid-template-columns: 1fr auto; }
+  .num { display: none; }
+  .checks td.lab { width: 40%; }
+}
+</style>
+
+<div class="wrap" id="app">
+  <header>
+    <div class="eyebrow">SynapSys decoder · real EEG check</div>
+    <h1>Benchmark walkthrough</h1>
+    <div class="meta" id="meta"><span>Loading run status…</span></div>
+    <div class="statusline" id="statusline"></div>
+    <p class="note" id="disclaimer"></p>
+  </header>
+  <nav class="track" id="track" aria-label="Stages"></nav>
+  <section class="chain" id="chain" aria-label="Decoder signal chain"></section>
+  <section class="tiles" id="tiles" hidden></section>
+  <main id="stages" style="display:grid;gap:16px"></main>
+  <footer id="foot"></footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const LABEL = { pass: "passed", fail: "failed", running: "running", pending: "waiting" };
+let lastUpdated = null;
+
+function pill(status) { return `<span class="pill s-${status}">${LABEL[status] || status}</span>`; }
+
+function renderChain(d) {
+  const ex = d.example;
+  const t = d.targets;
+  const fmtF = (f) => `${(+f).toFixed(f % 1 ? 2 : 0)} Hz`;
+  let scores = `<div class="d">waiting for stage 5</div>`;
+  let decision = `<div class="v">—</div><div class="d">YES / NO / HELP / REJECT on device</div>`;
+  if (ex) {
+    const max = Math.max(...Object.values(ex.scores));
+    scores = `<div class="scores">${Object.entries(ex.scores).map(([k, v]) =>
+      `<div class="score ${k === ex.winner ? "win" : ""}"><span>${fmtF(t[k])}</span><span class="b"><i style="width:${(v / Math.max(max, 1e-9) * 100).toFixed(0)}%"></i></span><span>${v.toFixed(3)}</span></div>`).join("")}</div>`;
+    const ok = ex.decision === ex.true_label;
+    decision = `<div class="v ${ok ? "decision-ok" : "decision-bad"}">${fmtF(ex.winner_frequency)} ${ok ? "✓" : "✗"}</div>
+      <div class="d">truth ${fmtF(ex.true_frequency)} · margin ${ex.margin.toFixed(3)}</div>`;
+  }
+  $("chain").innerHTML = `
+    <div class="chain-head"><h2>What the decoder does to one trial</h2>
+      <span class="muted mono" style="font-size:12.5px">${ex ? esc(ex.trial_id) : "example trial pending"}</span></div>
+    <div class="blocks">
+      <div class="block"><span class="k">1 · Raw EEG</span><span class="v">${d.channels.length} channels</span>
+        <span class="d">${esc(d.channels.join(" "))} · 250 Hz · 6 s epoch</span></div>
+      <div class="block"><span class="k">2 · Causal filter</span><span class="v">0.5–45 Hz</span>
+        <span class="d">4 biquads · past samples only (ESP32 path)</span></div>
+      <div class="block"><span class="k">3 · Window</span><span class="v">${d.window_seconds} s</span>
+        <span class="d">${ex ? `${ex.window_samples} samples from ${ex.window_start_s.toFixed(2)} s` : `${Math.round(d.window_seconds * 250)} samples`}</span></div>
+      <div class="block"><span class="k">4 · CCA vs references</span><span class="v">${Object.keys(t).length} scores</span>${scores}</div>
+      <div class="block"><span class="k">5 · Decision</span>${decision}</div>
+    </div>`;
+}
+
+function renderTiles(d) {
+  const h = d.headline;
+  if (!h) { $("tiles").hidden = true; return; }
+  $("tiles").hidden = false;
+  const p = (x) => `${(x * 100).toFixed(1)}%`;
+  $("tiles").innerHTML = `
+    <div class="tile hero"><span class="n">${p(h.accuracy_causal)}</span><span class="l">accuracy, causal filter (ESP32 path)</span></div>
+    <div class="tile"><span class="n">${p(h.accuracy_zero_phase)}</span><span class="l">accuracy, zero-phase (offline reference)</span></div>
+    <div class="tile"><span class="n">${p(h.chance)}</span><span class="l">chance level, 3 targets</span></div>
+    <div class="tile"><span class="n">${h.n_trials}</span><span class="l">trials, ${esc(d.subjects.join(", "))}</span></div>`;
+}
+
+function renderStages(d, bust) {
+  $("track").innerHTML = d.stages.map((s, i) =>
+    `<a href="#${s.id}" class="t-${s.status}" title="${esc(s.name)}: ${LABEL[s.status]}"><span class="bar"></span><span>${i + 1}. ${esc(s.name)}</span></a>`).join("");
+  $("stages").innerHTML = d.stages.map((s, i) => {
+    const checks = s.checks.length ? `<div class="checks-wrap"><table class="checks"><tbody>${s.checks.map((c) => {
+      const cls = c.ok === true ? "ok" : c.ok === false ? "bad" : "info";
+      const ic = c.ok === true ? "PASS" : c.ok === false ? "FAIL" : "INFO";
+      return `<tr><td class="ic ${cls}">${ic}</td><td class="lab">${esc(c.label)}</td><td class="val">${esc(c.value)}${c.note ? `<span class="nt">${esc(c.note)}</span>` : ""}</td></tr>`;
+    }).join("")}</tbody></table></div>` : (s.status === "pending" ? `<p class="empty">Not started yet.</p>` : "");
+    const figs = s.figures.length ? `<div class="figs">${s.figures.map((f) =>
+      `<figure><img src="${esc(f.src)}?v=${bust}" alt="${esc(f.caption)}" loading="lazy"><figcaption>${esc(f.caption)}</figcaption></figure>`).join("")}</div>` : "";
+    return `<section class="stage is-${s.status}" id="${s.id}">
+      <div class="stage-head"><span class="num">${String(i + 1).padStart(2, "0")}</span>
+        <div><h3>${esc(s.name)}</h3><div class="q">${esc(s.question)}</div></div>
+        <div style="display:grid;gap:4px;justify-items:end">${pill(s.status)}${s.seconds != null ? `<span class="muted mono" style="font-size:11.5px">${s.seconds}s</span>` : ""}</div></div>
+      ${s.summary ? `<p class="summary">${esc(s.summary)}</p>` : ""}
+      ${checks}${figs}</section>`;
+  }).join("");
+}
+
+function render(d) {
+  const done = d.stages.filter((s) => s.status === "pass" || s.status === "fail").length;
+  const failed = d.stages.some((s) => s.status === "fail");
+  const overall = failed ? "fail" : d.finished ? "pass" : "running";
+  const overallText = failed ? "a check failed" : d.finished ? "all stages passed" : `running · ${done}/${d.stages.length} stages done`;
+  $("meta").innerHTML = `<span>Dataset <b>${esc(d.dataset)}</b></span><span>Subjects <b>${esc(d.subjects.join(", "))}</b></span>
+    <span>Targets <b>${Object.values(d.targets).map((f) => `${f} Hz`).join(" · ")}</b></span>
+    <span>Window <b>${d.window_seconds} s</b></span><span>Harmonics <b>${d.harmonics}</b></span>`;
+  $("statusline").innerHTML = `<span class="pill s-${overall}">${overallText}</span>
+    <span class="muted mono" style="font-size:12.5px">updated ${esc(new Date(d.updated).toLocaleString())} · ${d.elapsed_s}s elapsed</span>`;
+  $("disclaimer").textContent = d.disclaimer;
+  renderChain(d);
+  renderTiles(d);
+  renderStages(d, encodeURIComponent(d.updated));
+  const env = d.environment || {};
+  $("foot").innerHTML = `<span>Generated by <span class="mono">scripts/benchmark_walkthrough.py</span> from the synapsys-decoder repository${env.git_revision ? ` at <span class="mono">${esc(env.git_revision.slice(0, 12))}</span>` : ""}.</span>
+    <span>Python ${esc(env.python || "")} · numpy ${esc(env.numpy || "")} · scipy ${esc(env.scipy || "")}</span>`;
+}
+
+async function load() {
+  try {
+    const r = await fetch(`status.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if (d.updated !== lastUpdated) { lastUpdated = d.updated; render(d); }
+    if (!d.finished) setTimeout(load, 8000);
+  } catch (e) {
+    $("meta").innerHTML = `<span>No run status yet. Start the run with <span class="mono">python scripts/benchmark_walkthrough.py</span>; this page fills in as each stage finishes.</span>`;
+    setTimeout(load, 8000);
+  }
+}
+load();
+</script>

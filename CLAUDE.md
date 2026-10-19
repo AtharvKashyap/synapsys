@@ -12,6 +12,8 @@ Sibling repo `../synapsys-stimulus` is the PsychoPy stimulus renderer — keep t
 .venv/bin/ruff format . && .venv/bin/ruff check .
 .venv/bin/python scripts/run_synthetic_validation.py      # M6 artifacts -> results/
 .venv/bin/python scripts/run_benchmark_validation.py      # M7/M8, needs data/benchmark/
+.venv/bin/python scripts/fetch_benchmark.py 1 2 3            # Wang data -> data/benchmark/ (needs .[data])
+.venv/bin/python scripts/benchmark_walkthrough.py         # 7-stage real-EEG check + viewer page
 .venv/bin/python scripts/mutation_check.py                # plant 11 bugs, confirm tests catch each (~1 min)
 .venv/bin/python scripts/make_report_artifacts.py --out docs/report   # all weekly-report evidence
 ```
@@ -37,7 +39,8 @@ macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applie
 - `mode: zero_phase` (sosfiltfilt) is offline-only. The ESP32 path is `mode: causal`; on-device the filter runs continuously on the stream, so offline evaluation should filter the whole epoch causally and **then** crop the window.
 - Wang Benchmark has no 8.571 Hz target (0.2 Hz grid, 8.0–15.8 Hz). Never relabel benchmark trials as YES/NO/HELP. Benchmark results validate the generic CCA only — they do not prove SynapSys meets 85 %.
 - Benchmark was recorded on 50 Hz mains; `configs/benchmark.yaml` disables the 60 Hz notch.
-- Raw EEG stays out of git (`data/` ignored).
+- Raw EEG stays out of git (`data/` ignored). Note `data/` sits in the iCloud-synced folder (~640 MB for S1–S3).
+- Walkthrough data-quality checks (SSVEP SNR > 3 dB, injected-drift ≥ 20 dB) are dataset diagnostics, not classifier thresholds. A spectral "power below 0.5 Hz" check on a 4.9 s segment is ill-posed (0.2 Hz bins, 0.4 Hz in transition band) — use the injected-drift linearity test.
 - Commits: no Claude / Co-Authored-By attribution.
 
 ## Layout
@@ -49,4 +52,4 @@ Scripts: `run_synthetic_validation.py` (M6), `run_benchmark_validation.py` (M7�
 `docs/validation.md`.
 
 ## Milestone status
-See README "Status" (M1–M6 done; M7–M8 code ready, awaiting Wang Benchmark download — user to decide how many subjects). Scope agreed so far: Python milestones M1–M8; ESP32 port (M9+) deferred.
+See README "Status" (M1–M7 done; M8 sweeps run on S1–S3 (2026-10-18), baseline choice to document; S1–S3 downloaded). Scope agreed so far: Python milestones M1–M8; ESP32 port (M9+) deferred.

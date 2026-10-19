@@ -101,6 +101,20 @@ src/synapsys_decoder/
 tests/                   pytest suite, one file per module plus script smoke tests
 ```
 
+## Real-EEG walkthrough (Wang 2017 Benchmark)
+
+```bash
+.venv/bin/pip install -e ".[data]"                       # py7zr for the .7z archives
+.venv/bin/python scripts/fetch_benchmark.py 1 2 3        # ~105 MB per subject -> data/benchmark/
+.venv/bin/python scripts/benchmark_walkthrough.py        # 7 checked stages -> results/benchmark_walkthrough/
+```
+
+The walkthrough writes `status.json`, figures and a viewer page (`index.html`); a copy of the
+S1–S3 run is in `docs/figures/benchmark/`. Headline (S1–S3, 8/12/15 Hz, O1/Oz/O2/POz, 2.5 s,
+2 harmonics): **52/54 = 96.3 % with the causal (ESP32) filter**, 53/54 = 98.1 % zero-phase,
+chance 33.3 %. S1–S8 are *experienced* SSVEP subjects, so expect lower numbers for naive users.
+These validate the generic CCA pipeline only; they are not SynapSys YES/NO/HELP accuracy.
+
 ## Evidence for reports
 
 ```bash
@@ -121,8 +135,8 @@ table, filter response, PSD before/after, accuracy vs SNR, mutation report) to i
 | M4 | Classifier: score all targets, structured result, optional gating | Done |
 | M5 | DSP: configurable causal bandpass/notch, zero-phase offline mode, response tests | Done |
 | M6 | Synthetic end-to-end: noise/interference, SNR sweep, plots | Done |
-| M7 | Public dataset: Wang Benchmark loader + 3-frequency smoke test | Loader + script done (tested on fake data); awaiting dataset download |
-| M8 | Window / harmonic / channel experiments | Script done; awaiting dataset download |
+| M7 | Public dataset: Wang Benchmark loader + 3-frequency smoke test | Done on S1–S3: 96.3 % causal / 98.1 % zero-phase, 54 trials, chance 33 % |
+| M8 | Window / harmonic / channel experiments | Run on S1–S3 (see docs/validation.md); baseline config choice still to be documented |
 | M9 | Embedded design: causal DSP + CCA in C/C++ | Not started (deferred until Python reference is validated) |
 | M10 | Cross-platform regression: Python vs ESP32 fixtures | Not started |
 | M11 | Hardware integration: acquisition, alpha, SSVEP, calibration, held-out test | Not started |

@@ -1,0 +1,640 @@
+{
+  "title": "Benchmark walkthrough",
+  "dataset": "Wang et al. 2017 Tsinghua SSVEP Benchmark",
+  "subjects": [
+    "S1",
+    "S2",
+    "S3"
+  ],
+  "targets": {
+    "F8_0": 8.0,
+    "F12_0": 12.0,
+    "F15_0": 15.0
+  },
+  "channels": [
+    "O1",
+    "Oz",
+    "O2",
+    "POz"
+  ],
+  "window_seconds": 2.5,
+  "harmonics": 2,
+  "disclaimer": "Public-dataset check of the generic CCA pipeline at 8, 12 and 15 Hz. Not SynapSys YES/NO/HELP accuracy and not evidence for the 85 % requirement.",
+  "started": "2026-10-19T00:05:48+00:00",
+  "updated": "2026-10-19T00:05:54+00:00",
+  "finished": true,
+  "stages": [
+    {
+      "id": "data",
+      "name": "Dataset files",
+      "question": "Are the files here, and do they contain our frequencies?",
+      "status": "pass",
+      "summary": "3 subjects on disk; 8, 12 and 15 Hz exist; 8.571 Hz correctly refused.",
+      "checks": [
+        {
+          "label": "S1.mat present",
+          "value": "106 MB",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "S2.mat present",
+          "value": "106 MB",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "S3.mat present",
+          "value": "106 MB",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Targets in Freq_Phase.mat",
+          "value": "40 (8.0-15.8 Hz, 0.2 Hz grid)",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "8 Hz exists in dataset (F8_0)",
+          "value": "yes",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "12 Hz exists in dataset (F12_0)",
+          "value": "yes",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "15 Hz exists in dataset (F15_0)",
+          "value": "yes",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Guardrail: asking for 8.571 Hz (YES) is refused",
+          "value": "refused",
+          "ok": true,
+          "note": "the benchmark has no 8.571 Hz target, so YES/NO/HELP cannot be tested here"
+        },
+        {
+          "label": "Channels in 64-channels.loc",
+          "value": "64; needed O1/Oz/O2/POz + 9 occipital: all found",
+          "ok": true,
+          "note": ""
+        }
+      ],
+      "figures": [],
+      "seconds": 0.4
+    },
+    {
+      "id": "load",
+      "name": "Load EEG",
+      "question": "Do epochs load with the right shape, rate and units?",
+      "status": "pass",
+      "summary": "54 trials loaded as (channels, samples) in volts at 250 Hz.",
+      "checks": [
+        {
+          "label": "S1 trials",
+          "value": "18 (3 frequencies x 6 blocks)",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "S2 trials",
+          "value": "18 (3 frequencies x 6 blocks)",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "S3 trials",
+          "value": "18 (3 frequencies x 6 blocks)",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Epoch shape (channels, samples)",
+          "value": "(9, 1500)",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Sample rate",
+          "value": "250 Hz",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "All values finite",
+          "value": "yes",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Typical amplitude (median channel SD)",
+          "value": "12.7 \u00b5V",
+          "ok": 1.0,
+          "note": "scalp EEG is normally a few to tens of \u00b5V; confirms \u00b5V->V conversion"
+        }
+      ],
+      "figures": [
+        {
+          "src": "fig/load_raw_trial.png",
+          "caption": "Raw EEG of one trial: 0.5 s cue, 5 s of flicker, 0.5 s blank. The shaded band is the window the decoder analyses (it starts 0.14 s after flicker onset, the visual latency)."
+        }
+      ],
+      "seconds": 1.4
+    },
+    {
+      "id": "ssvep",
+      "name": "SSVEP in raw EEG",
+      "question": "Is there a brain response at the flicker frequency?",
+      "status": "pass",
+      "summary": "Clear peaks at each presented frequency: the SSVEP is present in the raw data before any processing.",
+      "checks": [
+        {
+          "label": "Oz SNR at 8 Hz while looking at 8 Hz",
+          "value": "8.8 dB (best other target -1.9 dB)",
+          "ok": true,
+          "note": "diagnostic of the dataset, not a classifier threshold"
+        },
+        {
+          "label": "Oz SNR at 12 Hz while looking at 12 Hz",
+          "value": "9.2 dB (best other target -0.3 dB)",
+          "ok": true,
+          "note": "diagnostic of the dataset, not a classifier threshold"
+        },
+        {
+          "label": "Oz SNR at 15 Hz while looking at 15 Hz",
+          "value": "10.1 dB (best other target 2.8 dB)",
+          "ok": true,
+          "note": "diagnostic of the dataset, not a classifier threshold"
+        }
+      ],
+      "figures": [
+        {
+          "src": "fig/ssvep_spectra.png",
+          "caption": "Average spectrum at Oz for each presented frequency. Each line peaks at its own flicker frequency (dashed) and its 2nd harmonic (dotted); that peak is the SSVEP the decoder looks for."
+        }
+      ],
+      "seconds": 0.2
+    },
+    {
+      "id": "preprocess",
+      "name": "Causal filtering",
+      "question": "Does the ESP32-style filter keep the signal and drop drift?",
+      "status": "pass",
+      "summary": "Drift reduced -23 dB, 12 Hz kept within 0.02 dB.",
+      "checks": [
+        {
+          "label": "Shape preserved",
+          "value": "(4, 1500) -> (4, 1500)",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Output finite",
+          "value": "yes",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Injected drift removed, causal",
+          "value": "-23.4 dB inside the window (50 \u00b5V at 0.2 Hz + 200 \u00b5V offset)",
+          "ok": 1.0,
+          "note": "pass = drift amplitude cut at least 10x; steady-state design is -32 dB at 0.2 Hz, the causal filter has only 0.64 s to settle"
+        },
+        {
+          "label": "Injected drift removed, zero_phase",
+          "value": "-35.5 dB inside the window (50 \u00b5V at 0.2 Hz + 200 \u00b5V offset)",
+          "ok": null,
+          "note": "offline reference"
+        },
+        {
+          "label": "Power at 12 Hz (the SSVEP)",
+          "value": "-0.02 dB",
+          "ok": 1.0,
+          "note": ""
+        },
+        {
+          "label": "Causal vs zero-phase agreement inside window",
+          "value": "r = 0.634",
+          "ok": null,
+          "note": "causal filter has a phase lag and only 0.64 s to settle; both modes are scored in the next stages"
+        },
+        {
+          "label": "Notch",
+          "value": "off (benchmark recorded on 50 Hz mains, already notch-filtered)",
+          "ok": null,
+          "note": ""
+        }
+      ],
+      "figures": [
+        {
+          "src": "fig/preprocess_psd.png",
+          "caption": "Spectrum before and after the causal bandpass. The 12 Hz peak and its 24 Hz harmonic are unchanged; slow drift below 0.5 Hz and content above 45 Hz are reduced."
+        },
+        {
+          "src": "fig/preprocess_trace.png",
+          "caption": "The same trial after filtering: baseline wander is gone and the rhythmic 12 Hz activity is easier to see inside the analysis window."
+        }
+      ],
+      "seconds": 0.3
+    },
+    {
+      "id": "cca",
+      "name": "One trial through CCA",
+      "question": "What does the decoder see and decide for a single trial?",
+      "status": "pass",
+      "summary": "Decided F12_0 with \u03c1 = 0.625 (runner-up 0.193).",
+      "checks": [
+        {
+          "label": "Trial",
+          "value": "S1-b0-t4 (first 12 Hz trial of block 0, not hand-picked)",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Window",
+          "value": "625 samples = 2.5 s from 0.64 s",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Scores finite and in [0, 1]",
+          "value": "F8_0 0.193, F12_0 0.625, F15_0 0.085",
+          "ok": true,
+          "note": ""
+        },
+        {
+          "label": "Decision",
+          "value": "F12_0 (12 Hz), margin 0.432; truth F12_0",
+          "ok": true,
+          "note": ""
+        }
+      ],
+      "figures": [
+        {
+          "src": "fig/cca_scores.png",
+          "caption": "CCA compares the 4-channel window with sine/cosine references at each target frequency and 2nd harmonic. The highest correlation is the decision."
+        }
+      ],
+      "seconds": 0.0
+    },
+    {
+      "id": "smoke",
+      "name": "All trials",
+      "question": "How often is the decision right, and is that better than chance?",
+      "status": "pass",
+      "summary": "Causal 96.3%, zero-phase 98.1% on 54 trials (chance 33 %).",
+      "checks": [
+        {
+          "label": "Accuracy, causal (ESP32 path)",
+          "value": "52/54 = 96.3%  (chance 33.3 %, p = 1.0e-22)",
+          "ok": 1.0,
+          "note": "spec exit criterion: meaningfully above chance"
+        },
+        {
+          "label": "Per subject, causal",
+          "value": "S1 100%, S2 89%, S3 100%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Accuracy, zero_phase (offline reference)",
+          "value": "53/54 = 98.1%  (chance 33.3 %, p = 1.9e-24)",
+          "ok": 1.0,
+          "note": "spec exit criterion: meaningfully above chance"
+        },
+        {
+          "label": "Per subject, zero_phase",
+          "value": "S1 100%, S2 94%, S3 100%",
+          "ok": null,
+          "note": ""
+        }
+      ],
+      "figures": [
+        {
+          "src": "fig/smoke_confusion.png",
+          "caption": "Rows: frequency the subject looked at. Columns: what the decoder chose."
+        },
+        {
+          "src": "fig/smoke_scores.png",
+          "caption": "For each group of trials, the matching reference should score highest. The gap between boxes is what a future margin threshold would use."
+        }
+      ],
+      "seconds": 0.3
+    },
+    {
+      "id": "sweeps",
+      "name": "Design sweeps",
+      "question": "How do window length, channel count and harmonics change accuracy?",
+      "status": "pass",
+      "summary": "Window, channel and harmonic experiments complete.",
+      "checks": [
+        {
+          "label": "Accuracy vs window (causal)",
+          "value": "1s 85%, 1.5s 91%, 2s 91%, 2.5s 96%, 3s 96%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Accuracy vs window (zero-phase)",
+          "value": "1s 87%, 1.5s 93%, 2s 94%, 2.5s 98%, 3s 98%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Channels: 4 ch (O1/Oz/O2/POz)",
+          "value": "1s 85%, 1.5s 91%, 2s 91%, 2.5s 96%, 3s 96%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Channels: 9 ch occipital",
+          "value": "1s 91%, 1.5s 94%, 2s 98%, 2.5s 100%, 3s 100%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Harmonics: 1 harmonic",
+          "value": "1s 87%, 1.5s 87%, 2s 91%, 2.5s 91%, 3s 93%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Harmonics: 2 harmonics",
+          "value": "1s 85%, 1.5s 91%, 2s 91%, 2.5s 96%, 3s 96%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Harmonics: 3 harmonics",
+          "value": "1s 83%, 1.5s 89%, 2s 89%, 2.5s 96%, 3s 96%",
+          "ok": null,
+          "note": ""
+        },
+        {
+          "label": "Trials per point",
+          "value": "54 (small sample: one trial = 1.9%)",
+          "ok": null,
+          "note": ""
+        }
+      ],
+      "figures": [
+        {
+          "src": "fig/sweeps_accuracy_vs_window.png",
+          "caption": "Longer windows give CCA more cycles to lock onto; this is the latency vs accuracy trade-off for the 2-3 s window choice."
+        },
+        {
+          "src": "fig/sweeps_accuracy_channels.png",
+          "caption": "Our 4-channel montage against the 9-channel occipital set the benchmark literature uses."
+        },
+        {
+          "src": "fig/sweeps_accuracy_harmonics.png",
+          "caption": "Effect of including 1, 2 or 3 harmonics in the references."
+        }
+      ],
+      "seconds": 3.6
+    }
+  ],
+  "example": {
+    "trial_id": "S1-b0-t4",
+    "true_label": "F12_0",
+    "true_frequency": 12.0,
+    "scores": {
+      "F8_0": 0.193366852640075,
+      "F12_0": 0.6250410338874406,
+      "F15_0": 0.08495672425996682
+    },
+    "winner": "F12_0",
+    "winner_frequency": 12.0,
+    "confidence": 0.6250410338874406,
+    "margin": 0.43167418124736556,
+    "gated": false,
+    "accepted": true,
+    "decision": "F12_0",
+    "window_samples": 625,
+    "window_start_s": 0.64
+  },
+  "headline": {
+    "accuracy_causal": 0.9629629629629629,
+    "accuracy_zero_phase": 0.9814814814814815,
+    "n_trials": 54,
+    "chance": 0.3333333333333333
+  },
+  "elapsed_s": 6.2,
+  "environment": {
+    "python": "3.13.1",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "git_revision": "415fb60e8df730874369baf87683fc832e7562d1-dirty"
+  },
+  "config": {
+    "sample_rate_hz": 250.0,
+    "channels": [
+      "O1",
+      "Oz",
+      "O2",
+      "POz"
+    ],
+    "targets": {
+      "F8_0": 8.0,
+      "F12_0": 12.0,
+      "F15_0": 15.0
+    },
+    "window_seconds": 2.5,
+    "harmonics": 2,
+    "preprocessing": {
+      "remove_dc": true,
+      "bandpass_low_hz": 0.5,
+      "bandpass_high_hz": 45.0,
+      "bandpass_order": 4,
+      "notch_hz": null,
+      "notch_q": 30.0,
+      "mode": "causal"
+    },
+    "decision": {
+      "confidence_threshold": null,
+      "margin_threshold": null
+    },
+    "benchmark": {
+      "subjects": [
+        1
+      ],
+      "stimulus_onset_s": 0.5,
+      "visual_latency_s": 0.14,
+      "window_sweep_s": [
+        1.0,
+        1.5,
+        2.0,
+        2.5,
+        3.0
+      ],
+      "harmonics_sweep": [
+        1,
+        2,
+        3
+      ],
+      "extended_channels": [
+        "Pz",
+        "PO5",
+        "PO3",
+        "POz",
+        "PO4",
+        "PO6",
+        "O1",
+        "Oz",
+        "O2"
+      ]
+    }
+  },
+  "ssvep_snr_db": {
+    "F8_0": {
+      "F8_0": 8.799409198637445,
+      "F12_0": -1.8614492636648077,
+      "F15_0": -5.7984596171817575
+    },
+    "F12_0": {
+      "F8_0": -0.27792461788353573,
+      "F12_0": 9.200505159920628,
+      "F15_0": -0.5153996629846246
+    },
+    "F15_0": {
+      "F8_0": 2.8120672706445466,
+      "F12_0": 0.6274176949834687,
+      "F15_0": 10.084107406780113
+    }
+  },
+  "smoke": {
+    "causal": {
+      "accuracy": 0.9629629629629629,
+      "n_correct": 52,
+      "n": 54,
+      "p_value_vs_chance": 1.0030999795742906e-22,
+      "per_subject": {
+        "S1": 1.0,
+        "S2": 0.8888888888888888,
+        "S3": 1.0
+      }
+    },
+    "zero_phase": {
+      "accuracy": 0.9814814814814815,
+      "n_correct": 53,
+      "n": 54,
+      "p_value_vs_chance": 1.8744710744659293e-24,
+      "per_subject": {
+        "S1": 1.0,
+        "S2": 0.9444444444444444,
+        "S3": 1.0
+      }
+    }
+  },
+  "sweeps": {
+    "experiment2_window_sweep": {
+      "window_s": [
+        1.0,
+        1.5,
+        2.0,
+        2.5,
+        3.0
+      ],
+      "accuracy": {
+        "causal": [
+          0.8518518518518519,
+          0.9074074074074074,
+          0.9074074074074074,
+          0.9629629629629629,
+          0.9629629629629629
+        ],
+        "zero_phase": [
+          0.8703703703703703,
+          0.9259259259259259,
+          0.9444444444444444,
+          0.9814814814814815,
+          0.9814814814814815
+        ]
+      }
+    },
+    "experiment3_channels": {
+      "window_s": [
+        1.0,
+        1.5,
+        2.0,
+        2.5,
+        3.0
+      ],
+      "channel_sets": {
+        "4 ch (O1/Oz/O2/POz)": [
+          "O1",
+          "Oz",
+          "O2",
+          "POz"
+        ],
+        "9 ch occipital": [
+          "Pz",
+          "PO5",
+          "PO3",
+          "POz",
+          "PO4",
+          "PO6",
+          "O1",
+          "Oz",
+          "O2"
+        ]
+      },
+      "accuracy": {
+        "4 ch (O1/Oz/O2/POz)": [
+          0.8518518518518519,
+          0.9074074074074074,
+          0.9074074074074074,
+          0.9629629629629629,
+          0.9629629629629629
+        ],
+        "9 ch occipital": [
+          0.9074074074074074,
+          0.9444444444444444,
+          0.9814814814814815,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "experiment4_harmonics": {
+      "window_s": [
+        1.0,
+        1.5,
+        2.0,
+        2.5,
+        3.0
+      ],
+      "accuracy": {
+        "1 harmonic": [
+          0.8703703703703703,
+          0.8703703703703703,
+          0.9074074074074074,
+          0.9074074074074074,
+          0.9259259259259259
+        ],
+        "2 harmonics": [
+          0.8518518518518519,
+          0.9074074074074074,
+          0.9074074074074074,
+          0.9629629629629629,
+          0.9629629629629629
+        ],
+        "3 harmonics": [
+          0.8333333333333334,
+          0.8888888888888888,
+          0.8888888888888888,
+          0.9629629629629629,
+          0.9629629629629629
+        ]
+      }
+    }
+  }
+}

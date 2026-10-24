@@ -5,7 +5,7 @@ The ESP32-S3 runs the whole BCI by itself:
 ```
 ADS1299 (DRDY ISR, core 1) ─┐                                  ┌─► USB console: "SSVEP {json}" lines
                             ├─► sample queue ─► decoder task ──┤
-fixture replay (esp_timer) ─┘   (1024 = 4 s)    (core 0)       └─► BLE GATT: Command / Debug / Status
+fixture replay (250 Hz)   ─┘    (1024 = 4 s)    (core 0)       └─► BLE GATT: Command / Debug / Status
                                 filter + CCA every 125 samples → decision → re-arm → command
 ```
 
@@ -143,7 +143,7 @@ Data path:
 | Option | Default | Meaning |
 |---|---|---|
 | `SYNAPSYS_INPUT_*` | REPLAY | input source (see above) |
-| `SYNAPSYS_REPLAY_REALTIME` | y | 250 Hz via esp_timer. If off, the replay pushes samples as fast as possible (blocking) |
+| `SYNAPSYS_REPLAY_REALTIME` | y | 250 Hz, paced by the FreeRTOS tick (`xTaskDelayUntil`). If off, the replay pushes samples as fast as possible (blocking) |
 | `SYNAPSYS_REPLAY_LOOP` / `_PAUSE_MS` | y / 3000 | repeat passes |
 | `SYNAPSYS_SPI_SCLK_KHZ` | 2000 | SPI clock |
 | `SYNAPSYS_PIN_*` | see wiring | GPIOs (`-1` allowed for START/RESET/PWDN) |

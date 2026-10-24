@@ -19,6 +19,7 @@ Sibling repo `../synapsys-stimulus` is the PsychoPy stimulus renderer — keep t
 cmake -S firmware/decoder -B firmware/decoder/build -G Ninja && cmake --build firmware/decoder/build && ctest --test-dir firmware/decoder/build   # C++ core vs fixtures
 . ~/esp/esp-idf/export.sh && cd firmware/esp32 && idf.py build flash monitor   # ESP-IDF v5.3.2
 firmware/tools/run_qemu.sh                                 # real firmware in QEMU, no board (exit 0 = PASS)
+python firmware/tools/board_check.py --port PORT --stage replay|ads_test|live|soak   # bring-up PASS/FAIL (firmware/BRINGUP.md)
 .venv/bin/python scripts/record_serial.py --port /dev/cu.usbmodem* --seconds 20 --label YES --split calibration --out data/synapsys/S01/cal/yes_01.csv   # needs .[record], RAW_STREAM=y
 .venv/bin/python scripts/calibrate_thresholds.py data/synapsys/S01/cal --max-rest-commands-per-min <team limit>
 .venv/bin/python scripts/evaluate_heldout.py data/synapsys/S01/test      # once, frozen T/M

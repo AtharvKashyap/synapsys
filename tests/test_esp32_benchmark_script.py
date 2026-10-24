@@ -7,6 +7,7 @@ handling and comparison logic, not the firmware (that is the QEMU / real-board r
 import dataclasses
 import importlib.util
 import json
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -22,11 +23,13 @@ CFG = load_config(ROOT / "configs" / "benchmark.yaml")
 
 
 class FakeBoard:
-    def __init__(self, config="benchmark_v1", perturb=0.0, drop_eval=False):
+    def __init__(self, config="benchmark_v1", perturb=0.0, drop_eval=False, corrupt_once=False):
         self.out: list[bytes] = []
         self.inbuf = b""
         self.config, self.perturb, self.drop_eval = config, perturb, drop_eval
+        self.corrupt_once = corrupt_once  # flip one digit of one sample line, as a bad link would
         self.stream, self.samples = 0, []
+        self.crc = 0
 
     def _emit(self, obj):
         self.out.append(("SSVEP " + json.dumps(obj) + "\n").encode())
@@ -40,6 +43,11 @@ class FakeBoard:
         self.inbuf += data
         *lines, self.inbuf = self.inbuf.split(b"\n")
         for raw in lines:
+            if self.corrupt_once and raw.startswith(b"S ") and len(self.samples) == 700:
+                raw = raw.replace(b"e-", b"e-1", 1)  # still parses, wrong value
+                self.corrupt_once = False
+            if not raw.startswith(b"Y"):
+                self.crc = zlib.crc32(raw + b"\n", self.crc)
             line = raw.decode()
             if line.startswith("B "):
                 self.stream, self.samples = int(line[2:]), []
@@ -88,8 +96,13 @@ class FakeBoard:
                         "config": self.config,
                         "samples": 0,
                         "bad_lines": 0,
+                        "crc": self.crc,
                     }
                 )
+                self.crc = 0
+
+    def reset_input_buffer(self):
+        self.out.clear()
 
     def readline(self):
         return self.out.pop(0) if self.out else b""
@@ -133,6 +146,14 @@ def test_fails_on_score_error_and_missing_eval(monkeypatch, tmp_path):
     assert mod.main(["--port", "f", "--subjects", "1", "--results-root", str(tmp_path / "b")]) == 1
     (run,) = (tmp_path / "b").iterdir()
     assert json.loads((run / "run.json").read_text())["metrics"]["missing_evals"] == 3
+
+
+def test_corrupted_block_is_detected_and_resent(monkeypatch, tmp_path, capsys):
+    mod = _load(monkeypatch, FakeBoard(corrupt_once=True))
+    assert mod.main(["--port", "f", "--subjects", "1", "--results-root", str(tmp_path)]) == 0
+    assert "CRC mismatch" in capsys.readouterr().out
+    (run,) = tmp_path.iterdir()
+    assert json.loads((run / "run.json").read_text())["metrics"]["link_retries"] == 1
 
 
 def test_refuses_wrong_board_config(monkeypatch, tmp_path):

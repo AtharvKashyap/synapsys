@@ -95,6 +95,7 @@ void decoder_task(void* /*arg*/) {
         ae.type = app::EventType::kAck;
         ae.tag = s.seq;
         ae.t = s.pass;  // bad lines seen by the feed task
+        ae.crc = s.tag;
         post(ae, portMAX_DELAY);
       }
       continue;

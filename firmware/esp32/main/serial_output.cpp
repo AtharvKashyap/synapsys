@@ -181,9 +181,11 @@ void print_eval(const app::Event& ev) {
 
 void print_ack(const app::Event& ev) {
   Line l;
-  l.add("{\"event\":\"ack\",\"n\":%u,\"config\":\"%s\",\"samples\":%u,\"bad_lines\":%u}",
+  l.add("{\"event\":\"ack\",\"n\":%u,\"config\":\"%s\",\"samples\":%u,\"bad_lines\":%u,"
+        "\"crc\":%u}",
         static_cast<unsigned>(ev.tag), s_ctx.config_name,
-        static_cast<unsigned>(s_ctx.decoder->samples.load()), static_cast<unsigned>(ev.t));
+        static_cast<unsigned>(s_ctx.decoder->samples.load()), static_cast<unsigned>(ev.t),
+        static_cast<unsigned>(ev.crc));
   l.emit();
 }
 

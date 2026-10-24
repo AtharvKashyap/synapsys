@@ -1,0 +1,43 @@
+{
+  "run_id": "20261024-194510_esp32_benchmark",
+  "command": [
+    "scripts/esp32_benchmark.py",
+    "--port",
+    "/dev/cu.usbmodem5B8F0676581",
+    "--subjects",
+    "1",
+    "2",
+    "3"
+  ],
+  "environment": {
+    "python": "3.13.1",
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2",
+    "git_revision": "7c8add92b30c31b9c372ef37d1688aaf681f564c-dirty"
+  },
+  "metrics": {
+    "trials": 54,
+    "subjects": [
+      1,
+      2,
+      3
+    ],
+    "config": "benchmark_v1",
+    "accuracy_python": 0.9629629629629629,
+    "accuracy_esp32": 0.9629629629629629,
+    "winner_agreement": 54,
+    "max_score_err_window": 4.416498201714747e-05,
+    "missing_evals": 0,
+    "max_score_err_hop": 5.324393121530768e-05,
+    "hop_points": 432,
+    "hop_failed": 0,
+    "decision_ms_avg": 4.455585648148149,
+    "decision_ms_max": 4.715,
+    "link_retries": 0,
+    "wall_s": 684.3214015839621,
+    "all_pass": true,
+    "note": "Generic CCA on the public Wang benchmark (8/12/15 Hz); not SynapSys YES/NO/HELP accuracy."
+  }
+}

@@ -1,0 +1,60 @@
+board ready (config benchmark_v1); 54 trials, window [160, 785) + every hop point
+  [ok ] trial   0 S1 true F8_0   python F8_0   esp32 F8_0   err 4.6e-06  hop 8/8
+  [ok ] trial   1 S1 true F12_0  python F12_0  esp32 F12_0  err 6.7e-06  hop 8/8
+  [ok ] trial   2 S1 true F15_0  python F15_0  esp32 F15_0  err 4.5e-06  hop 8/8
+  [ok ] trial   3 S1 true F8_0   python F8_0   esp32 F8_0   err 3.1e-05  hop 8/8
+  [ok ] trial   4 S1 true F12_0  python F12_0  esp32 F12_0  err 4.5e-06  hop 8/8
+  [ok ] trial   5 S1 true F15_0  python F15_0  esp32 F15_0  err 1.1e-05  hop 8/8
+  [ok ] trial   6 S1 true F8_0   python F8_0   esp32 F8_0   err 1.9e-06  hop 8/8
+  [ok ] trial   7 S1 true F12_0  python F12_0  esp32 F12_0  err 2.7e-05  hop 8/8
+  [ok ] trial   8 S1 true F15_0  python F15_0  esp32 F15_0  err 8.3e-06  hop 8/8
+  [ok ] trial   9 S1 true F8_0   python F8_0   esp32 F8_0   err 1.3e-06  hop 8/8
+  [ok ] trial  10 S1 true F12_0  python F12_0  esp32 F12_0  err 3.0e-05  hop 8/8
+  [ok ] trial  11 S1 true F15_0  python F15_0  esp32 F15_0  err 8.6e-06  hop 8/8
+  [ok ] trial  12 S1 true F8_0   python F8_0   esp32 F8_0   err 3.3e-06  hop 8/8
+  [ok ] trial  13 S1 true F12_0  python F12_0  esp32 F12_0  err 7.2e-06  hop 8/8
+  [ok ] trial  14 S1 true F15_0  python F15_0  esp32 F15_0  err 1.5e-06  hop 8/8
+  [ok ] trial  15 S1 true F8_0   python F8_0   esp32 F8_0   err 2.3e-06  hop 8/8
+  [ok ] trial  16 S1 true F12_0  python F12_0  esp32 F12_0  err 4.0e-05  hop 8/8
+  [ok ] trial  17 S1 true F15_0  python F15_0  esp32 F15_0  err 1.2e-05  hop 8/8
+  [ok ] trial  18 S2 true F8_0   python F8_0   esp32 F8_0   err 4.4e-05  hop 8/8
+  [ok ] trial  19 S2 true F12_0  python F12_0  esp32 F12_0  err 2.0e-05  hop 8/8
+  [ok ] trial  20 S2 true F15_0  python F8_0   esp32 F8_0   err 3.7e-06  hop 8/8
+  [ok ] trial  21 S2 true F8_0   python F8_0   esp32 F8_0   err 3.6e-05  hop 8/8
+  [ok ] trial  22 S2 true F12_0  python F12_0  esp32 F12_0  err 3.5e-06  hop 8/8
+  [ok ] trial  23 S2 true F15_0  python F15_0  esp32 F15_0  err 3.7e-06  hop 8/8
+  [ok ] trial  24 S2 true F8_0   python F8_0   esp32 F8_0   err 6.0e-06  hop 8/8
+  [ok ] trial  25 S2 true F12_0  python F12_0  esp32 F12_0  err 4.6e-07  hop 8/8
+  [ok ] trial  26 S2 true F15_0  python F15_0  esp32 F15_0  err 3.6e-06  hop 8/8
+  [ok ] trial  27 S2 true F8_0   python F8_0   esp32 F8_0   err 3.8e-06  hop 8/8
+  [ok ] trial  28 S2 true F12_0  python F12_0  esp32 F12_0  err 4.3e-06  hop 8/8
+  [ok ] trial  29 S2 true F15_0  python F15_0  esp32 F15_0  err 5.8e-06  hop 8/8
+  [ok ] trial  30 S2 true F8_0   python F8_0   esp32 F8_0   err 8.6e-06  hop 8/8
+  [ok ] trial  31 S2 true F12_0  python F12_0  esp32 F12_0  err 1.8e-05  hop 8/8
+  [ok ] trial  32 S2 true F15_0  python F12_0  esp32 F12_0  err 1.8e-05  hop 8/8
+  [ok ] trial  33 S2 true F8_0   python F8_0   esp32 F8_0   err 1.6e-06  hop 8/8
+  [ok ] trial  34 S2 true F12_0  python F12_0  esp32 F12_0  err 1.3e-05  hop 8/8
+  [ok ] trial  35 S2 true F15_0  python F15_0  esp32 F15_0  err 1.1e-05  hop 8/8
+  [ok ] trial  36 S3 true F8_0   python F8_0   esp32 F8_0   err 1.9e-05  hop 8/8
+  [ok ] trial  37 S3 true F12_0  python F12_0  esp32 F12_0  err 3.1e-06  hop 8/8
+  [ok ] trial  38 S3 true F15_0  python F15_0  esp32 F15_0  err 1.9e-05  hop 8/8
+  [ok ] trial  39 S3 true F8_0   python F8_0   esp32 F8_0   err 3.8e-05  hop 8/8
+  [ok ] trial  40 S3 true F12_0  python F12_0  esp32 F12_0  err 1.7e-05  hop 8/8
+  [ok ] trial  41 S3 true F15_0  python F15_0  esp32 F15_0  err 2.1e-05  hop 8/8
+  [ok ] trial  42 S3 true F8_0   python F8_0   esp32 F8_0   err 4.3e-05  hop 8/8
+  [ok ] trial  43 S3 true F12_0  python F12_0  esp32 F12_0  err 1.8e-05  hop 8/8
+  [ok ] trial  44 S3 true F15_0  python F15_0  esp32 F15_0  err 1.8e-05  hop 8/8
+  [ok ] trial  45 S3 true F8_0   python F8_0   esp32 F8_0   err 9.7e-06  hop 8/8
+  [ok ] trial  46 S3 true F12_0  python F12_0  esp32 F12_0  err 2.6e-05  hop 8/8
+  [ok ] trial  47 S3 true F15_0  python F15_0  esp32 F15_0  err 9.9e-06  hop 8/8
+  [ok ] trial  48 S3 true F8_0   python F8_0   esp32 F8_0   err 2.1e-05  hop 8/8
+  [ok ] trial  49 S3 true F12_0  python F12_0  esp32 F12_0  err 3.3e-05  hop 8/8
+  [ok ] trial  50 S3 true F15_0  python F15_0  esp32 F15_0  err 4.1e-06  hop 8/8
+  [ok ] trial  51 S3 true F8_0   python F8_0   esp32 F8_0   err 2.8e-06  hop 8/8
+  [ok ] trial  52 S3 true F12_0  python F12_0  esp32 F12_0  err 1.5e-05  hop 8/8
+  [ok ] trial  53 S3 true F15_0  python F15_0  esp32 F15_0  err 3.2e-05  hop 8/8
+
+accuracy  python 96.3%  esp32 96.3%  (54 trials, chance 33.3%)
+same winner on 54/54 trials; max score error 4.4e-05 (benchmark window, 0 missing), 5.3e-05 (all 432 hop points, 0 failed)
+on-chip decision time: avg 4.46 ms, max 4.71 ms (filter + 3 CCA)
+PASS; results /Users/atharvk/Desktop/Claude projects/Synapsys/synapsys-decoder/results/20261024-194510_esp32_benchmark

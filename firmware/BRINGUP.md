@@ -141,6 +141,11 @@ decoder, the queues and the tasks are the production code.
    - every score within 1e-3 of Python's;
    - all hop points present.
 
+   Every block of samples is CRC-checked by the board. If bytes were lost or corrupted on
+   the cable (seen over the COM/UART bridge), the script prints `[link] ... resending the
+   trial` and sends that trial again; the summary counts these resends. A few are harmless:
+   only trials that arrived intact are decoded and compared.
+
    The ESP32 accuracy must then equal Python's 96.3 %. The `decision time` line is the
    real on-chip speed. Commit `results/<run_id>_esp32_benchmark/` (or copy it into
    `firmware/reports/board/`) as evidence.

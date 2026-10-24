@@ -20,7 +20,8 @@ struct Sample {
   uint8_t flags;    // SampleFlag bits
   uint8_t stream;   // replay: fixture index; live: 0
   uint16_t pass;    // replay: pass number (0-based); live: 0; host sync: bad line count
-  uint32_t tag;     // host feed: stream id given by the host (B <id>); otherwise 0
+  uint32_t tag;     // host feed: stream id given by the host (B <id>); otherwise 0.
+                    // Sync markers: CRC-32 of the host lines since the previous sync
 };
 
 // Decoder channel names in config order (raw-stream header).
@@ -89,7 +90,8 @@ struct Event {
   uint32_t t;                  // samples since stream start (= window end for decisions)
   uint8_t stream;
   uint16_t pass;
-  uint32_t tag;                // host feed stream id
+  uint32_t tag;                // host feed stream id (kAck: sync number)
+  uint32_t crc;                // kAck: CRC-32 (zlib) of the host lines since the previous sync
   // kDecision
   synapsys::WindowResult result;
   const char* rearm_state;     // static string from Rearm::state_name()

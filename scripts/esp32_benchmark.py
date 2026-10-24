@@ -26,6 +26,7 @@ import dataclasses
 import json
 import sys
 import time
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -39,6 +40,11 @@ from synapsys_decoder.streaming import decode_stream
 ROOT = Path(__file__).resolve().parents[1]
 TOL = 1e-3
 BLOCK = 64  # lines in flight; well under the board's 16 KB RX buffer
+TRIES = 3  # sends of one trial before giving up (a retry needs a link error: CRC or no ack)
+
+
+class LinkError(Exception):
+    """Bytes lost or corrupted between the computer and the board; the trial is resent."""
 
 
 class Board:
@@ -54,6 +60,7 @@ class Board:
         self.timeout = timeout
         self.events: list[dict] = []
         self.sync_n = 0
+        self.bad_lines = 0
         self.log = []
 
     def _read_until_ack(self, n: int, timeout: float) -> dict | None:
@@ -91,6 +98,7 @@ class Board:
             ack = self._read_until_ack(self.sync_n, 1.0)
             if ack is not None:
                 self.events.clear()
+                self.bad_lines = ack.get("bad_lines", 0)
                 return ack
         sys.exit(
             "no ack from the board: is the host-feed firmware flashed, and the port right? "
@@ -98,16 +106,25 @@ class Board:
         )
 
     def send_lines(self, lines: list[str]) -> dict:
+        """Send in blocks, each checked by the board's CRC; LinkError if anything got lost."""
         for i in range(0, len(lines), BLOCK):
             self.sync_n += 1
-            payload = "\n".join(lines[i : i + BLOCK]) + f"\nY {self.sync_n}\n"
-            self.ser.write(payload.encode())
+            data = "".join(f"{ln}\n" for ln in lines[i : i + BLOCK]).encode()
+            self.ser.write(data + f"Y {self.sync_n}\n".encode())
             ack = self._read_until_ack(self.sync_n, self.timeout)
             if ack is None:
-                sys.exit(f"board stopped answering (sync {self.sync_n})")
-            if ack.get("bad_lines"):
-                sys.exit(f"board reported {ack['bad_lines']} unparsable line(s)")
+                raise LinkError(f"no ack for sync {self.sync_n}")
+            if "crc" not in ack:
+                sys.exit("the board firmware predates the CRC check: rebuild and flash it")
+            bad, self.bad_lines = ack.get("bad_lines", 0) - self.bad_lines, ack.get("bad_lines", 0)
+            if bad:
+                raise LinkError(f"{bad} unparsable line(s) at sync {self.sync_n}")
+            if ack["crc"] != zlib.crc32(data):
+                raise LinkError(f"CRC mismatch at sync {self.sync_n}")
         return ack
+
+    def save_log(self, path: Path) -> None:
+        path.write_text("\n".join(self.log) + "\n")
 
 
 def label(cfg, freq: float) -> str:
@@ -156,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     rows, all_ok, t0 = [], True, time.monotonic()
+    retries = 0
     dec_ms = []
     for i, trial in enumerate(trials):
         py = decode_trial(trial, cfg, window_start_s=start_s).result
@@ -165,8 +183,22 @@ def main(argv: list[str] | None = None) -> int:
             lines.append("S " + " ".join(f"{v:.17g}" for v in trial.eeg[:, n]))
             if n + 1 == end:
                 lines.append("E")
-        board.events.clear()
-        board.send_lines(lines)
+        for attempt in range(1, TRIES + 1):
+            board.events.clear()
+            try:
+                board.send_lines(lines)
+                break
+            except LinkError as e:
+                retries += 1
+                print(f"  [link] trial {i}: {e}; resending the trial ({attempt}/{TRIES})")
+                board.ser.reset_input_buffer()
+                time.sleep(0.5)
+                board.handshake(10.0)
+        else:
+            log = Path(args.results_root) / "esp32_benchmark_failed_board.log"
+            log.parent.mkdir(parents=True, exist_ok=True)
+            board.save_log(log)
+            sys.exit(f"trial {i}: the link kept failing; board output saved to {log}")
         tag = f"h{i}"
         evs = [e for e in board.events if e.get("stream") == tag]
         ev = next((e for e in evs if e.get("event") == "eval"), None)
@@ -235,6 +267,7 @@ def main(argv: list[str] | None = None) -> int:
         "hop_failed": sum(r["hop_fail"] for r in rows),
         "decision_ms_avg": float(np.mean(dec_ms)) if dec_ms else None,
         "decision_ms_max": float(np.max(dec_ms)) if dec_ms else None,
+        "link_retries": retries,
         "wall_s": time.monotonic() - t0,
         "all_pass": all_ok,
         "note": "Generic CCA on the public Wang benchmark (8/12/15 Hz); not SynapSys "
@@ -242,7 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     run_dir = create_run_dir(args.results_root, "esp32_benchmark")
     save_run(run_dir, config=cfg.to_dict(), metrics=summary, trials=rows, command=sys.argv)
-    (run_dir / "board.log").write_text("\n".join(board.log) + "\n")
+    board.save_log(run_dir / "board.log")
     print(f"\naccuracy  python {acc_py:.1%}  esp32 {acc_dev:.1%}  ({n} trials, chance 33.3%)")
     werr = summary["max_score_err_window"]
     print(
@@ -251,6 +284,8 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['missing_evals']} missing), {summary['max_score_err_hop']:.1e} (all "
         f"{summary['hop_points']} hop points, {summary['hop_failed']} failed)"
     )
+    if retries:
+        print(f"{retries} trial resend(s) after link errors (CRC-detected; resent trials decoded)")
     if dec_ms:
         print(
             f"on-chip decision time: avg {summary['decision_ms_avg']:.2f} ms, "

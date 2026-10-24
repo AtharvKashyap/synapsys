@@ -7,8 +7,10 @@
 //   B <id>                start stream <id> (uint32): the decoder and re-arm are reset
 //   S <v0> <v1> <v2> <v3> one sample, volts, config channel order (send %.17g: exact doubles)
 //   E                     evaluate the window ending at the current sample now (off-schedule)
-//   Y <n>                 sync: the board answers SSVEP {"event":"ack","n":<n>,...} after
-//                         every earlier line has been processed and its output printed
+//   Y <n>                 sync: the board answers SSVEP {"event":"ack","n":<n>,...,"crc":<c>}
+//                         after every earlier line has been processed and its output printed;
+//                         <c> = CRC-32 (zlib) of every byte received since the previous Y line,
+//                         so the host can detect lost or corrupted bytes and resend
 // The console driver drops bytes when its RX buffer (kRxBufferBytes) is full, so the host
 // must keep less than that in flight: send a block of lines, then Y, then wait for the ack.
 #pragma once

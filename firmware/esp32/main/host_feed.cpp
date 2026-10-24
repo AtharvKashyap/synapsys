@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "esp_log.h"
+#include "esp_rom_crc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sdkconfig.h"
@@ -36,6 +37,9 @@ bool install_console_rx() {
 #else
   const auto port = static_cast<uart_port_t>(CONFIG_ESP_CONSOLE_UART_NUM);
   if (uart_driver_install(port, kRxBufferBytes, 4096, 0, nullptr, 0) != ESP_OK) return false;
+  // Interrupt when 32 of the 128 FIFO bytes are used (default 120): ~8 ms of headroom at
+  // 115200 baud instead of <1 ms before the FIFO overflows and bytes are lost.
+  uart_set_rx_full_threshold(port, 32);
   uart_vfs_dev_use_driver(port);
 #endif
   setvbuf(stdin, nullptr, _IONBF, 0);
@@ -56,6 +60,7 @@ void feed_task(void* /*arg*/) {
   uint32_t stream = 0, seq = 0;
   bool start_pending = false, have_stream = false;
   uint32_t bad_lines = 0;
+  uint32_t crc = 0;  // over every byte received since the last Y line
 
   for (;;) {
     if (fgets(s_line, sizeof(s_line), stdin) == nullptr) {
@@ -65,6 +70,10 @@ void feed_task(void* /*arg*/) {
     }
     char* p = s_line;
     while (*p == ' ' || *p == '\r' || *p == '\n') ++p;
+    if (*p != 'Y') {
+      crc = esp_rom_crc32_le(crc, reinterpret_cast<const uint8_t*>(s_line),
+                             static_cast<uint32_t>(std::strlen(s_line)));
+    }
     if (*p == '\0') continue;
     app::Sample s{};
     s.tag = stream;
@@ -108,6 +117,8 @@ void feed_task(void* /*arg*/) {
         s.flags = app::kFlagNoData | app::kFlagSync;
         s.seq = static_cast<uint32_t>(std::strtoul(p, nullptr, 10));
         s.pass = static_cast<uint16_t>(bad_lines > 0xFFFF ? 0xFFFF : bad_lines);
+        s.tag = crc;
+        crc = 0;
         send(s);
         break;
       default:

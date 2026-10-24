@@ -27,7 +27,24 @@ prints PASS or FAIL; only move on after a PASS. Save the log of every PASS (put 
 The DevKitC-1 has **two USB connectors**:
 - **"USB"**: the S3's native USB. **Use this one.** Flashing and the console both go
   through it.
-- **"UART"**: a USB-serial bridge chip. You only need it if the native port won't connect.
+- **"UART"** (on many N8R8 clone boards: **"COM"**): a USB-serial bridge chip (CP210x or
+  CH34x). Also works: add `sdkconfig.uart.defaults` to the build (see "Using the COM port"
+  below). On the Mac it shows up as `/dev/cu.usbserial-*`, `/dev/cu.wchusbserial*` or
+  `/dev/cu.SLAB_USBtoUART` instead of `/dev/cu.usbmodem*`.
+
+**Using the COM port.** The default firmware prints its console on the native USB port, so
+over COM you would see only the boot ROM. Build with the extra overlay so the console (and
+host feed) use the COM port, at 115200 baud:
+```bash
+idf.py -B build_uart -D SDKCONFIG=build_uart/sdkconfig \
+    -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.host.defaults;sdkconfig.uart.defaults" build
+idf.py -B build_uart -p /dev/cu.usbserial-XXXX flash monitor
+```
+(Drop `sdkconfig.host.defaults` and use another build dir, e.g. `build_uart_replay`, for the
+stage 1 replay self-test over COM.) Everything else in this guide is the same, with your
+`cu.usbserial-*` port in place of `cu.usbmodem*`. Over COM, the 54-trial benchmark takes
+about 12-15 min (115200 baud) instead of a few minutes. This is the console path the QEMU
+runs use.
 
 **Power:** there is no on switch. Plugging in the USB cable powers the board and starts it.
 - **RST** (also labelled EN) reboots it.

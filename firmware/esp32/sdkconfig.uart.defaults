@@ -1,0 +1,9 @@
+# Console on the UART bridge connector ("COM"/"UART" on the board) instead of the native USB.
+# For boards/cables where you plug into the USB-serial bridge (CP210x / CH34x) port.
+# Layer it last, e.g. host-feed over the COM port:
+#   idf.py -B build_uart -D SDKCONFIG=build_uart/sdkconfig \
+#     -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.host.defaults;sdkconfig.uart.defaults" build
+# Same console path as the QEMU runs (sdkconfig.qemu.defaults). 115200 baud = the
+# baud scripts/esp32_benchmark.py and board_check.py open the port with.
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=115200

@@ -20,3 +20,10 @@ Misclassified trials (identical on both): S2 block 0 true F15_0 -> F8_0, S2 bloc
 
 Generic CCA on the public benchmark only; not SynapSys YES/NO/HELP accuracy. QEMU
 timings are not hardware timings: repeat on a real board (firmware/BRINGUP.md stage 1b).
+
+## COM-port build (2026-10-24)
+
+`sdkconfig.defaults;sdkconfig.host.defaults;sdkconfig.uart.defaults` (console on the UART bridge
+port, 115200 baud; the build for boards plugged in via "COM"/"UART") also run in QEMU:
+S1 first 6 trials, same winner 6/6, max score error 3.1e-05 (window), 2.8e-05 (48 hop points,
+0 failed), PASS.

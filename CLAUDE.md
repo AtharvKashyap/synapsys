@@ -20,7 +20,7 @@ cmake -S firmware/decoder -B firmware/decoder/build -G Ninja && cmake --build fi
 . ~/esp/esp-idf/export.sh && cd firmware/esp32 && idf.py build flash monitor   # ESP-IDF v5.3.2
 firmware/tools/run_qemu.sh                                 # real firmware in QEMU, no board (exit 0 = PASS)
 python firmware/tools/board_check.py --port PORT --stage replay|ads_test|live|soak   # bring-up PASS/FAIL (firmware/BRINGUP.md)
-.venv/bin/python scripts/esp32_benchmark.py --port PORT --subjects 1 2 3   # Wang EEG decoded ON the chip vs Python (host-feed firmware: sdkconfig.host.defaults)
+.venv/bin/python scripts/esp32_benchmark.py --port PORT --subjects 1 2 3   # Wang EEG decoded ON the chip vs Python (host-feed firmware: sdkconfig.host.defaults; + sdkconfig.uart.defaults when plugged into the board's COM/UART bridge port)
 .venv/bin/python scripts/record_serial.py --port /dev/cu.usbmodem* --seconds 20 --label YES --split calibration --out data/synapsys/S01/cal/yes_01.csv   # needs .[record], RAW_STREAM=y
 .venv/bin/python scripts/calibrate_thresholds.py data/synapsys/S01/cal --max-rest-commands-per-min <team limit>
 .venv/bin/python scripts/evaluate_heldout.py data/synapsys/S01/test      # once, frozen T/M

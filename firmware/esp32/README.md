@@ -44,6 +44,7 @@ Static DRAM is 141 KB of 342 KB, including the ~50 kB `Decoder` in `.bss`.
 | Choice | What it does |
 |---|---|
 | **Fixture replay** (default) | Streams 6 embedded synthetic fixtures (`main/generated/fixtures_embedded.hpp`) through the real queue → decoder → re-arm → outputs at 250 Hz. Prints a PASS/FAIL line per decision point, a summary per fixture and a summary per pass. Loops forever by default, which doubles as a heap/stack soak test. |
+| **Host feed over USB** | The computer streams recorded EEG over the console port (protocol in `main/host_feed.hpp`). `scripts/esp32_benchmark.py` sends the Wang benchmark trials and compares every board result with Python. `Decoder config: Wang benchmark` (default in this mode) selects `config_benchmark_v1()`. Build with `sdkconfig.host.defaults` (BLE off). |
 | ADS1299 live | Live EEG from the ADS1299. |
 | ADS1299 internal test signal | CONFIG2 = 0xD0 (INT_CAL) and the CHnSET mux of each used channel set to the test signal (gain 24 → 0x65). This proves the SPI, DRDY and scaling path without electrodes: expect a ~1 Hz square wave of about ±1.9 mV. Decoder labels are meaningless in this mode. |
 

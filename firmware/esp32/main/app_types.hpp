@@ -19,7 +19,8 @@ struct Sample {
   uint32_t seq;     // producer sequence number (0, 1, 2, ... since source start)
   uint8_t flags;    // SampleFlag bits
   uint8_t stream;   // replay: fixture index; live: 0
-  uint16_t pass;    // replay: pass number (0-based); live: 0
+  uint16_t pass;    // replay: pass number (0-based); live: 0; host sync: bad line count
+  uint32_t tag;     // host feed: stream id given by the host (B <id>); otherwise 0
 };
 
 // Decoder channel names in config order (raw-stream header).
@@ -39,6 +40,9 @@ enum SampleFlag : uint8_t {
   kFlagStreamStart = 1u << 0,  // reset decoder + re-arm before pushing this sample
   kFlagStreamEnd = 1u << 1,    // last sample of a replay stream: finalise its self-check
   kFlagPassEnd = 1u << 2,      // last sample of a replay pass: print the summary
+  kFlagNoData = 1u << 3,       // marker only (host feed): v[] is unused, nothing is pushed
+  kFlagEval = 1u << 4,         // with kFlagNoData: evaluate the current window now
+  kFlagSync = 1u << 5,         // with kFlagNoData: print an ack (seq = sync number)
 };
 
 // Counters written by the producer (acquisition or replay), read by the output task.
@@ -74,6 +78,8 @@ enum class EventType : uint8_t {
   kTiming,         // min/avg/max decision compute over the last N decisions
   kStreamSummary,  // replay: one fixture finished
   kPassSummary,    // replay: one pass over all fixtures finished
+  kEval,           // host feed: off-schedule evaluation (E)
+  kAck,            // host feed: sync acknowledged (Y)
 };
 
 enum class Check : uint8_t { kNone, kPass, kFail, kNear, kUnexpected };
@@ -83,6 +89,7 @@ struct Event {
   uint32_t t;                  // samples since stream start (= window end for decisions)
   uint8_t stream;
   uint16_t pass;
+  uint32_t tag;                // host feed stream id
   // kDecision
   synapsys::WindowResult result;
   const char* rearm_state;     // static string from Rearm::state_name()
@@ -111,6 +118,8 @@ struct Context {
   DecoderStats* decoder = nullptr;
   const synapsys::Config* cfg = nullptr;
   const char* source_name = "";
+  const char* config_name = "";
+  bool host_feed = false;  // input is the host feed (stream ids in output lines)
 };
 
 // Task handles for stack high-water reporting (set once at task creation, read-only after).

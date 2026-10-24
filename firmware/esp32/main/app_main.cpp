@@ -9,6 +9,7 @@
 #include "app_types.hpp"
 #include "ble_output.h"
 #include "decoder_task.hpp"
+#include "host_feed.hpp"
 #include "esp_app_desc.h"
 #include "esp_chip_info.h"
 #include "esp_heap_caps.h"
@@ -68,7 +69,13 @@ extern "C" void app_main(void) {
            chip.revision % 100);
 
   // ---- Decoder configuration: frozen v1 + Kconfig overrides.
+#if CONFIG_SYNAPSYS_CONFIG_BENCHMARK
+  s_cfg = synapsys::config_benchmark_v1();
+  const char* config_name = "benchmark_v1";
+#else
   s_cfg = synapsys::config_synapsys_v1();
+  const char* config_name = "synapsys_v1";
+#endif
   s_cfg.hop_samples = CONFIG_SYNAPSYS_HOP_SAMPLES;
 #if CONFIG_SYNAPSYS_CONF_THRESHOLD_EN
   s_cfg.has_confidence_threshold = parse_threshold(
@@ -83,6 +90,7 @@ extern "C" void app_main(void) {
   rearm.refractory_samples = CONFIG_SYNAPSYS_REARM_REFRACTORY;
   rearm.release_count = CONFIG_SYNAPSYS_REARM_RELEASE;
 
+  ESP_LOGI(kTag, "decoder config: %s", config_name);
   ESP_LOGI(kTag, "decoder: fs %.1f Hz, window %d, hop %d, %d SOS sections, rank_tol %g",
            s_cfg.sample_rate_hz, synapsys::kWindow, s_cfg.hop_samples, s_cfg.n_sections,
            s_cfg.rank_tol);
@@ -109,6 +117,9 @@ extern "C" void app_main(void) {
 #if CONFIG_SYNAPSYS_INPUT_REPLAY
   const bool replay_mode = true;
   const char* source_name = "replay";
+#elif CONFIG_SYNAPSYS_INPUT_HOST
+  const bool replay_mode = false;
+  const char* source_name = "host";
 #elif CONFIG_SYNAPSYS_INPUT_ADS1299_TEST
   const bool replay_mode = false;
   const char* source_name = "ads1299-test";
@@ -126,6 +137,10 @@ extern "C" void app_main(void) {
   ctx.decoder = &s_decoder_stats;
   ctx.cfg = &s_cfg;
   ctx.source_name = source_name;
+  ctx.config_name = config_name;
+#if CONFIG_SYNAPSYS_INPUT_HOST
+  ctx.host_feed = true;
+#endif
   if (ctx.samples == nullptr || ctx.events == nullptr) {
     ESP_LOGE(kTag, "queue allocation failed (sample queue %d x %u B)",
              CONFIG_SYNAPSYS_SAMPLE_QUEUE_LEN, static_cast<unsigned>(sizeof(app::Sample)));
@@ -162,6 +177,8 @@ extern "C" void app_main(void) {
   bool src_ok;
 #if CONFIG_SYNAPSYS_INPUT_REPLAY
   src_ok = replay::start(ctx);
+#elif CONFIG_SYNAPSYS_INPUT_HOST
+  src_ok = host_feed::start(ctx);
 #elif CONFIG_SYNAPSYS_INPUT_ADS1299_TEST
   src_ok = acquisition::start(ctx, /*test_signal=*/true);
 #else

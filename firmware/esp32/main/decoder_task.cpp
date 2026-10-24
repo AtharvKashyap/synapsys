@@ -78,6 +78,28 @@ void decoder_task(void* /*arg*/) {
   for (;;) {
     if (xQueueReceive(s_ctx.samples, &s, portMAX_DELAY) != pdTRUE) continue;
 
+    if (s.flags & app::kFlagNoData) {  // host-feed markers: nothing is pushed
+      if (s.flags & app::kFlagEval) {
+        const int64_t e0 = esp_timer_get_time();
+        const synapsys::WindowResult er = s_decoder->evaluate();
+        app::Event ee{};
+        ee.type = app::EventType::kEval;
+        ee.t = stream_t;
+        ee.tag = s.tag;
+        ee.result = er;
+        ee.compute_us = static_cast<uint32_t>(esp_timer_get_time() - e0);
+        post(ee, portMAX_DELAY);
+      }
+      if (s.flags & app::kFlagSync) {
+        app::Event ae{};
+        ae.type = app::EventType::kAck;
+        ae.tag = s.seq;
+        ae.t = s.pass;  // bad lines seen by the feed task
+        post(ae, portMAX_DELAY);
+      }
+      continue;
+    }
+
     if (s.flags & app::kFlagStreamStart) {
       s_decoder->reset();
       s_rearm->reset();
@@ -123,12 +145,13 @@ void decoder_task(void* /*arg*/) {
       ev.t = stream_t;
       ev.stream = s.stream;
       ev.pass = s.pass;
+      ev.tag = s.tag;
       ev.result = r;
       ev.rearm_state = s_rearm->state_name();
       ev.compute_us = dt;
       ev.check = app::Check::kNone;
       if (s_replay) replay::check_point(s.stream, stream_t, r, cfg, &ev);
-      post(ev);
+      post(ev, s_ctx.host_feed ? portMAX_DELAY : kPostWait);  // host feed: never drop
 
       if (emit != synapsys::kReject) {
         ds->commands.fetch_add(1, std::memory_order_relaxed);
@@ -137,6 +160,7 @@ void decoder_task(void* /*arg*/) {
         ce.t = stream_t;
         ce.stream = s.stream;
         ce.pass = s.pass;
+        ce.tag = s.tag;
         ce.target = static_cast<int8_t>(emit);
         post(ce, pdMS_TO_TICKS(100));  // commands matter more than debug lines
       }

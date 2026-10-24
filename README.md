@@ -66,6 +66,7 @@ All commands from the repo root.
 | Record own EEG from the ESP32 (raw stream on) | `.venv/bin/python scripts/record_serial.py --port /dev/cu.usbmodem* --seconds 20 --label YES --split calibration --out data/synapsys/S01/cal/yes_01.csv` |
 | Choose T/M on calibration recordings | `.venv/bin/python scripts/calibrate_thresholds.py data/synapsys/S01/cal --max-rest-commands-per-min <team limit>` |
 | One held-out evaluation (frozen T/M) | `.venv/bin/python scripts/evaluate_heldout.py data/synapsys/S01/test` |
+| Wang EEG decoded on the ESP32 vs Python (host-feed firmware) | `.venv/bin/python scripts/esp32_benchmark.py --port /dev/cu.usbmodem* --subjects 1 2 3` |
 | Device decisions == Python on captured samples | `.venv/bin/python scripts/verify_device_log.py capture.serial.log` |
 | Public benchmark (milestones 7-8, requires `data/benchmark/`, see [data/README.md](data/README.md)) | `.venv/bin/python scripts/run_benchmark_validation.py --config configs/benchmark.yaml` |
 
@@ -151,7 +152,7 @@ table, filter response, PSD before/after, accuracy vs SNR, mutation report) to i
 | M7 | Public dataset: Wang Benchmark loader + 3-frequency smoke test | Done on S1–S3: 96.3 % causal / 98.1 % zero-phase, 54 trials, chance 33 % |
 | M8 | Window / harmonic / channel experiments | Run on S1–S3 (see docs/validation.md); baseline config choice still to be documented |
 | M9 | Embedded design: causal DSP + CCA in C/C++ | Done: C++ core matches Python on all fixtures (float scores ≤ 9e-5); re-arm identical on 140 sequences; ESP-IDF firmware builds |
-| M10 | Cross-platform regression: Python vs ESP32 fixtures | Passes in QEMU ESP32-S3 (48/48, real-time 250 Hz); on a physical board: pending |
+| M10 | Cross-platform regression: Python vs ESP32 fixtures | Passes in QEMU ESP32-S3: fixtures 48/48 at real-time 250 Hz; real Wang EEG (S1–S3) decoded on the emulated chip 96.3 %, same winner as Python on 54/54 trials (`firmware/reports/esp32_benchmark_qemu.md`). Physical board: pending (`firmware/BRINGUP.md` stage 1b) |
 | M11 | Hardware integration: acquisition, alpha, SSVEP, calibration, held-out test | Tooling ready (raw stream verified in QEMU; record / calibrate / evaluate scripts tested); needs the board |
 
 ## Headline synthetic results

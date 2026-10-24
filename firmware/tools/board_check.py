@@ -197,8 +197,9 @@ def summarize(lines, stage: str) -> bool:
         else:
             for c, (ptp, f0) in zip(("O1", "Oz", "O2", "POz"), sq, strict=False):
                 check(
-                    2.5 <= ptp <= 5.0 and 0.5 <= f0 <= 2.5,
-                    f"{c}: test signal {ptp:.2f} mV p-p at {f0:.2f} Hz (expect ~1.9 or ~3.75 mV, ~1 Hz)",
+                    1.5 <= ptp <= 5.0 and 0.5 <= f0 <= 2.5,
+                    f"{c}: test signal {ptp:.2f} mV p-p at {f0:.2f} Hz "
+                    "(expect ~1.9 or ~3.75 mV, ~1 Hz)",
                 )
     if cmds:
         print("commands:", ", ".join(f"{c.get('label')}@t={c.get('t')}" for c in cmds[:20]))

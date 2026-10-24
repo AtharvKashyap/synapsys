@@ -20,6 +20,7 @@ cmake -S firmware/decoder -B firmware/decoder/build -G Ninja && cmake --build fi
 . ~/esp/esp-idf/export.sh && cd firmware/esp32 && idf.py build flash monitor   # ESP-IDF v5.3.2
 firmware/tools/run_qemu.sh                                 # real firmware in QEMU, no board (exit 0 = PASS)
 python firmware/tools/board_check.py --port PORT --stage replay|ads_test|live|soak   # bring-up PASS/FAIL (firmware/BRINGUP.md)
+.venv/bin/python scripts/esp32_benchmark.py --port PORT --subjects 1 2 3   # Wang EEG decoded ON the chip vs Python (host-feed firmware: sdkconfig.host.defaults)
 .venv/bin/python scripts/record_serial.py --port /dev/cu.usbmodem* --seconds 20 --label YES --split calibration --out data/synapsys/S01/cal/yes_01.csv   # needs .[record], RAW_STREAM=y
 .venv/bin/python scripts/calibrate_thresholds.py data/synapsys/S01/cal --max-rest-commands-per-min <team limit>
 .venv/bin/python scripts/evaluate_heldout.py data/synapsys/S01/test      # once, frozen T/M
@@ -39,7 +40,7 @@ macOS/iCloud gotcha: this folder is under iCloud-synced Desktop, which re-applie
 - The C++ must port the Björck–Golub SVD/QR CCA (no covariance inversion, no regularisation). References restart at t=0 each window (constant tables).
 - `firmware/`: ESP32/C++ work. Follow `firmware/PLAN.md` phase gates.
 - M11 workflow (docs/calibration.md): recordings carry `true_label` (target or `REST`) and `metadata.split` (`calibration`|`test`|`pilot`). `calibrate_thresholds.py` refuses `test`; `evaluate_heldout.py` accepts only `test` and takes T/M from the config only. The false-activation limit (`--max-rest-commands-per-min`) is a team decision: never pick it yourself.
-- Serial line formats (`SSVEP {json}`, `RAW <seq> <uV x4>`) are shared by `serial_output.cpp` and `io/serial_log.py`: change both together.
+- Serial line formats (`SSVEP {json}`, `RAW <seq> <uV x4>`, host-feed `B/S/E/Y` commands) are shared by `serial_output.cpp`/`host_feed.cpp` and `io/serial_log.py`/`scripts/esp32_benchmark.py`: change both together.
 
 ## Conventions (do not change silently)
 - EEG arrays: `(n_channels, n_samples)`, float64, **volts**. Select channels by name.

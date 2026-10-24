@@ -1,0 +1,8 @@
+# Host-feed mode: the computer streams recorded EEG (Wang benchmark) to the board.
+# Use with: idf.py -B build_host -D SDKCONFIG=build_host/sdkconfig \
+#             -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.host.defaults" build
+CONFIG_SYNAPSYS_INPUT_HOST=y
+CONFIG_SYNAPSYS_CONFIG_BENCHMARK=y
+# BLE is not needed to check processing; off keeps the console path simple.
+CONFIG_BT_ENABLED=n
+CONFIG_SYNAPSYS_BLE_ENABLE=n

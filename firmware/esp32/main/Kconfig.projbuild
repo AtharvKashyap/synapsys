@@ -15,6 +15,13 @@ menu "SynapSys BCI"
                 reference (|score err| < 1e-3, exact winner and decision). Works on a bare
                 ESP32-S3 board.
 
+        config SYNAPSYS_INPUT_HOST
+            bool "Host feed over USB (recorded EEG from the computer; no ADS1299)"
+            help
+                The computer streams recorded EEG (e.g. the Wang benchmark) over the console
+                port and the board decodes it with the unchanged decoder. Driven by
+                scripts/esp32_benchmark.py, which compares every result with Python.
+
         config SYNAPSYS_INPUT_ADS1299
             bool "ADS1299 live EEG"
 
@@ -25,6 +32,16 @@ menu "SynapSys BCI"
                 internal ~1 Hz square-wave test signal. Proves SPI + DRDY + scaling
                 without electrodes. Decoder output is meaningless in this mode.
     endchoice
+
+    config SYNAPSYS_CONFIG_BENCHMARK
+        bool "Decoder config: Wang benchmark (8/12/15 Hz, no 60 Hz notch)"
+        depends on SYNAPSYS_INPUT_HOST
+        default y
+        help
+            Uses config_benchmark_v1() (the frozen benchmark config, same as
+            configs/benchmark.yaml) instead of the SynapSys YES/NO/HELP config, so recorded
+            benchmark trials can be checked against the Python benchmark results. Off:
+            SynapSys config_synapsys_v1().
 
     # Menus below are not hidden by the input choice so that every source file always
     # compiles (both drivers are built in every configuration).

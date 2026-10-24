@@ -7,6 +7,7 @@ prints PASS or FAIL; only move on after a PASS. Save the log of every PASS (put 
 | Stage | Needs | Proves |
 |---|---|---|
 | 1 Replay | bare ESP32-S3 + USB cable | the chip runs the decoder correctly at 250 Hz, and its real speed |
+| 1b Real brain data | bare board + USB cable | the chip decodes the Wang benchmark EEG exactly like Python (the 96 % test, on the chip) |
 | 2 BLE | + phone | commands reach a phone |
 | 3 Soak (replay) | bare board, 30 min | no memory leak, no drops, stable timing |
 | 4 ADS1299 test signal | + ADS1299 board, wired | SPI, DRDY, 250 Hz and the scaling to volts |
@@ -81,6 +82,54 @@ then copy `synapsys.bin` over. On that computer, run `pip install esptool` and t
    # press RST on the board right after starting it
    ```
    **PASS** = 48/48 on every pass, fs about 250, no drops, and decision compute under 50 ms.
+
+## Stage 1b: real brain data through the chip (no ADS1299 needed)
+
+This repeats the Python benchmark test (Wang 2017, S1-S3, 54 trials), with the processing on
+the ESP32-S3:
+- The Mac reads each recorded trial and streams the raw samples over the USB cable.
+- The board filters and decodes them on its own CPU and prints its scores.
+- The script compares every result with Python on the same samples.
+
+Only the source of the samples differs from live use (USB instead of the ADS1299); the
+decoder, the queues and the tasks are the production code.
+
+1. Make sure the benchmark data is on the Mac: `ls data/benchmark/S1.mat`. If it is
+   missing, run `.venv/bin/python scripts/fetch_benchmark.py 1 2 3`.
+2. Build and flash the host-feed firmware. It uses its own build folder, so the normal
+   build is untouched:
+   ```bash
+   cd firmware/esp32
+   idf.py -B build_host -D SDKCONFIG=build_host/sdkconfig \
+       -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.host.defaults" build
+   idf.py -B build_host -p /dev/cu.usbmodem1101 flash
+   ```
+   The equivalent in menuconfig is `Input source → Host feed over USB` with
+   `Decoder config: Wang benchmark` on.
+3. Run the comparison (no monitor open; it needs the port):
+   ```bash
+   cd ../.. && .venv/bin/pip install -e ".[record]"     # once (pyserial)
+   .venv/bin/python scripts/esp32_benchmark.py --port /dev/cu.usbmodem1101 --subjects 1 2 3
+   ```
+   It prints one line per trial (true target, Python's answer, the board's answer, score
+   difference), then a summary like:
+   ```
+   accuracy  python 96.3%  esp32 96.3%  (54 trials, chance 33.3%)
+   same winner on 54/54 trials; max score error ~1e-5 (benchmark window), ... (all 432 hop points, 0 failed)
+   on-chip decision time: avg .. ms, max .. ms (filter + 3 CCA)
+   PASS; results results/<run_id>_esp32_benchmark
+   ```
+4. **PASS** =
+   - the same winner as Python on every trial;
+   - every score within 1e-3 of Python's;
+   - all hop points present.
+
+   The ESP32 accuracy must then equal Python's 96.3 %. The `decision time` line is the
+   real on-chip speed. Commit `results/<run_id>_esp32_benchmark/` (or copy it into
+   `firmware/reports/board/`) as evidence.
+
+Verified in QEMU (2026-10-23, emulated ESP32-S3, same firmware and script): see
+`firmware/reports/esp32_benchmark_qemu.md`.
 
 ## Stage 2: BLE to a phone
 

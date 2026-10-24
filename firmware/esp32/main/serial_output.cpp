@@ -102,6 +102,7 @@ void print_decision(const app::Event& ev) {
     l.add(",\"stream\":\"%s\",\"pass\":%u", replay::stream_name(ev.stream),
           static_cast<unsigned>(ev.pass));
   }
+  if (s_ctx.host_feed) l.add(",\"stream\":\"h%u\"", static_cast<unsigned>(ev.tag));
   l.add(",\"status\":\"%s\",\"scores\":[", degenerate ? "DEGENERATE" : "OK");
   for (int k = 0; k < synapsys::kTargets; ++k) {
     l.add("%s%.6f", k ? "," : "", static_cast<double>(r.scores[k]));
@@ -152,10 +153,38 @@ void print_command(const app::Event& ev) {
   Line l;
   l.add("{\"event\":\"command\",\"label\":\"%s\",\"t\":%u", label, static_cast<unsigned>(ev.t));
   if (s_replay) l.add(",\"stream\":\"%s\"", replay::stream_name(ev.stream));
+  if (s_ctx.host_feed) l.add(",\"stream\":\"h%u\"", static_cast<unsigned>(ev.tag));
   l.add("}");
   l.emit();
   if (s_ble) ble_output_command(label);
   led_command();
+}
+
+// Host feed: off-schedule evaluation (E). More digits than decision lines: it is compared
+// with the Python reference.
+void print_eval(const app::Event& ev) {
+  const synapsys::Config& cfg = *s_ctx.cfg;
+  const synapsys::WindowResult& r = ev.result;
+  const bool degenerate = r.status == synapsys::Status::kDegenerate;
+  Line l;
+  l.add("{\"event\":\"eval\",\"stream\":\"h%u\",\"t\":%u,\"status\":\"%s\",\"scores\":[",
+        static_cast<unsigned>(ev.tag), static_cast<unsigned>(ev.t),
+        degenerate ? "DEGENERATE" : "OK");
+  for (int k = 0; k < synapsys::kTargets; ++k) {
+    l.add("%s%.9f", k ? "," : "", static_cast<double>(r.scores[k]));
+  }
+  l.add("],\"winner\":\"%s\",\"margin\":%.9f,\"decision\":\"%s\",\"ms\":%.3f}",
+        degenerate ? "NONE" : app::label_of(cfg, r.winner), static_cast<double>(r.margin),
+        app::label_of(cfg, r.decision), ev.compute_us / 1000.0);
+  l.emit();
+}
+
+void print_ack(const app::Event& ev) {
+  Line l;
+  l.add("{\"event\":\"ack\",\"n\":%u,\"config\":\"%s\",\"samples\":%u,\"bad_lines\":%u}",
+        static_cast<unsigned>(ev.tag), s_ctx.config_name,
+        static_cast<unsigned>(s_ctx.decoder->samples.load()), static_cast<unsigned>(ev.t));
+  l.emit();
 }
 
 void print_timing(const app::Event& ev) {
@@ -307,6 +336,8 @@ void output_task(void* /*arg*/) {
         case app::EventType::kTiming: print_timing(ev); break;
         case app::EventType::kStreamSummary:
         case app::EventType::kPassSummary: print_summary(ev); break;
+        case app::EventType::kEval: print_eval(ev); break;
+        case app::EventType::kAck: print_ack(ev); break;
       }
     }
     led_tick();

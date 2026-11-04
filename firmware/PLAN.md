@@ -1,6 +1,6 @@
 # ESP32-S3 decoder port: plan of action
 
-Status (2026-10-19): **phases 0-5 done**, phase 6 code written, needs a physical board.
+Status (2026-11-04): **phases 0-5 done** (QEMU and a real ESP32-S3-N8R8: Wang S1-S3 decoded on-chip, 54/54 same winner as Python, 4.5 ms/decision). Phase 6 code written; needs the ADS1299 board, BLE phone test and soak.
 
 | Phase | Status | Evidence |
 |---|---|---|
@@ -9,7 +9,7 @@ Status (2026-10-19): **phases 0-5 done**, phase 6 code written, needs a physical
 | 2 CCA | done | score err double 1.3e-15, float 9.0e-5; degenerate points exact |
 | 3 Decision | done | winner/decisions 100 % on 340 points; 36 near-threshold points listed, none differ |
 | 4 Re-arm | done | Python reference + C++ port identical on 140 sequences / 5800 steps |
-| 5 ESP-IDF + playback | done in QEMU | real firmware, real-time 250 Hz replay, 48/48 PASS; physical board pending |
+| 5 ESP-IDF + playback | done | QEMU: real-time 250 Hz replay 48/48 PASS. Real ESP32-S3 board: Wang benchmark 54/54 same winner, `reports/esp32_benchmark_board.md` |
 | 6 ADS1299 + BLE | code written, builds | needs PCB/board: register read-back, DRDY 250 Hz, BLE notify, 30 min soak |
 | 7 prep: raw stream | done in QEMU | optional `SYNAPSYS_RAW_STREAM` prints every raw sample (uV) for calibration recordings; 9000/9000 samples, no gaps, 48/48 PASS |
 

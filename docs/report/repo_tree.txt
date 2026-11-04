@@ -10,7 +10,7 @@ synapsys-decoder/
 │   │   └── ...
 │   ├── report/
 │   │   ├── synthetic/
-│   │   │   └── 20261003-232651_synthetic_validation/
+│   │   │   └── 20261003-232842_synthetic_validation/
 │   │   │       ├── accuracy_vs_snr.png
 │   │   │       ├── clean_cca_scores.png
 │   │   │       ├── config.yaml
@@ -34,22 +34,175 @@ synapsys-decoder/
 │   │   ├── test_summary.md
 │   │   └── test_summary.png
 │   ├── algorithm.md
+│   ├── calibration.md
+│   ├── reference_v1.md
 │   └── validation.md
+├── firmware/
+│   ├── decoder/
+│   │   ├── include/
+│   │   │   └── synapsys/
+│   │   │       ├── config_v1.hpp
+│   │   │       ├── decoder.hpp
+│   │   │       └── rearm.hpp
+│   │   ├── src/
+│   │   │   ├── decoder.cpp
+│   │   │   ├── linalg.hpp
+│   │   │   └── rearm.cpp
+│   │   ├── tests/
+│   │   │   ├── bench.cpp
+│   │   │   ├── test_equivalence.cpp
+│   │   │   ├── test_rearm.cpp
+│   │   │   └── test_unit.cpp
+│   │   └── CMakeLists.txt
+│   ├── esp32/
+│   │   ├── main/
+│   │   │   ├── generated/
+│   │   │   │   └── fixtures_embedded.hpp
+│   │   │   ├── CMakeLists.txt
+│   │   │   ├── Kconfig.projbuild
+│   │   │   ├── acquisition.cpp
+│   │   │   ├── acquisition.hpp
+│   │   │   ├── ads1299.cpp
+│   │   │   ├── ads1299.hpp
+│   │   │   ├── app_main.cpp
+│   │   │   ├── app_types.hpp
+│   │   │   ├── ble_output.c
+│   │   │   ├── ble_output.h
+│   │   │   ├── decoder_task.cpp
+│   │   │   ├── decoder_task.hpp
+│   │   │   ├── host_feed.cpp
+│   │   │   ├── host_feed.hpp
+│   │   │   ├── replay.cpp
+│   │   │   ├── replay.hpp
+│   │   │   ├── serial_output.cpp
+│   │   │   └── serial_output.hpp
+│   │   ├── .gitignore
+│   │   ├── CMakeLists.txt
+│   │   ├── README.md
+│   │   ├── sdkconfig.defaults
+│   │   ├── sdkconfig.host.defaults
+│   │   ├── sdkconfig.qemu.defaults
+│   │   └── sdkconfig.uart.defaults
+│   ├── reports/
+│   │   ├── board/
+│   │   │   ├── stage1b_esp32_benchmark_20261024/
+│   │   │   │   ├── console.txt
+│   │   │   │   ├── run.json
+│   │   │   │   └── trials.csv
+│   │   │   └── .gitkeep
+│   │   ├── equivalence_double.md
+│   │   ├── equivalence_float.md
+│   │   ├── equivalence_float_real_input.md
+│   │   ├── esp32_benchmark_board.md
+│   │   ├── esp32_benchmark_qemu.md
+│   │   └── raw_stream_qemu.md
+│   ├── tools/
+│   │   ├── board_check.py
+│   │   ├── embed_fixtures.py
+│   │   ├── flatten_fixtures.py
+│   │   ├── gen_config.py
+│   │   └── run_qemu.sh
+│   ├── .gitignore
+│   ├── BRINGUP.md
+│   ├── PLAN.md
+│   └── README.md
+├── fixtures/
+│   ├── config/
+│   │   ├── benchmark_v1.json
+│   │   └── synapsys_v1.json
+│   ├── rearm/
+│   │   ├── README.md
+│   │   └── sequences.csv
+│   ├── synthetic/
+│   │   ├── syn_dead_channel/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_flat/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_heavy_60hz/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_help_snr-20/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_help_snr-28/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_large_dc_offset/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_mixture_no_help/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_no_snr-20/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_noise_only/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_offtarget_10hz/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   ├── syn_yes_clean/
+│   │   │   ├── expected.json
+│   │   │   ├── filtered_benchmark_v1.csv
+│   │   │   ├── filtered_synapsys_v1.csv
+│   │   │   └── raw.csv
+│   │   └── syn_yes_snr-15/
+│   │       ├── expected.json
+│   │       ├── filtered_benchmark_v1.csv
+│   │       ├── filtered_synapsys_v1.csv
+│   │       └── raw.csv
+│   ├── MANIFEST.json
+│   └── README.md
 ├── results/
 │   └── .gitkeep
 ├── scripts/
 │   ├── analyze_recording.py
+│   ├── benchmark_walkthrough.py
+│   ├── calibrate_thresholds.py
+│   ├── esp32_benchmark.py
+│   ├── evaluate_heldout.py
+│   ├── fetch_benchmark.py
+│   ├── make_fixtures.py
+│   ├── make_rearm_fixtures.py
 │   ├── make_report_artifacts.py
 │   ├── mutation_check.py
+│   ├── record_serial.py
 │   ├── run_benchmark_validation.py
-│   └── run_synthetic_validation.py
+│   ├── run_synthetic_validation.py
+│   ├── verify_device_log.py
+│   └── walkthrough_page.html
 ├── src/
 │   └── synapsys_decoder/
 │       ├── io/
 │       │   ├── __init__.py
 │       │   ├── benchmark.py
-│       │   └── csv_eeg.py
+│       │   ├── csv_eeg.py
+│       │   └── serial_log.py
 │       ├── __init__.py
+│       ├── calibration.py
 │       ├── cca.py
 │       ├── classifier.py
 │       ├── config.py
@@ -57,24 +210,31 @@ synapsys-decoder/
 │       ├── pipeline.py
 │       ├── plotting.py
 │       ├── preprocessing.py
+│       ├── rearm.py
 │       ├── references.py
 │       ├── runlog.py
+│       ├── streaming.py
 │       ├── synthetic.py
 │       └── types.py
 ├── tests/
 │   ├── test_benchmark_script.py
+│   ├── test_calibration.py
 │   ├── test_cca.py
 │   ├── test_classifier.py
 │   ├── test_config.py
+│   ├── test_esp32_benchmark_script.py
+│   ├── test_frozen_reference.py
 │   ├── test_io_benchmark.py
 │   ├── test_io_csv.py
 │   ├── test_metrics.py
 │   ├── test_pipeline.py
 │   ├── test_plotting.py
 │   ├── test_preprocessing.py
+│   ├── test_rearm.py
 │   ├── test_references.py
+│   ├── test_serial_log.py
+│   ├── test_streaming.py
 │   └── test_synthetic.py
 ├── .gitignore
-├── CLAUDE.md
 ├── README.md
 └── pyproject.toml

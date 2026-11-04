@@ -1,6 +1,6 @@
 ============================= test session starts ==============================
-platform darwin -- Python 3.13.1, pytest-9.1.1, pluggy-1.6.0 -- /Users/atharvk/.venvs/synapsys-decoder/bin/python
-rootdir: /Users/atharvk/Desktop/Claude projects/Synapsys/synapsys-decoder
+platform darwin -- Python 3.13.1, pytest-9.1.1, pluggy-1.6.0 -- <venv>/bin/python
+rootdir: <repo>
 configfile: pyproject.toml
 testpaths: tests
 collecting ... collected 194 items
@@ -200,7 +200,7 @@ tests/test_synthetic.py::test_noise_and_off_target PASSED                [ 98%]
 tests/test_synthetic.py::test_metadata_complete PASSED                   [ 99%]
 tests/test_synthetic.py::test_invalid_args PASSED                        [100%]
 
-- generated xml file: /Users/atharvk/Desktop/Claude projects/Synapsys/synapsys-decoder/docs/report/junit.xml -
+- generated xml file: <repo>/docs/report/junit.xml -
 =========================== short test summary info ============================
 SKIPPED [1] tests/test_io_benchmark.py:224: real data not present
 ======================== 193 passed, 1 skipped in 5.06s ========================

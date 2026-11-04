@@ -54,7 +54,7 @@ runs use.
 ## 1. Mac setup (once per terminal)
 
 ```bash
-cd "~/Desktop/Claude projects/Synapsys/synapsys-decoder"    # the repo
+cd synapsys-decoder               # the repo root
 . ~/esp/esp-idf/export.sh        # puts idf.py, esptool.py and pyserial on PATH
 idf.py --version                 # expect v5.3.2
 ```

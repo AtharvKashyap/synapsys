@@ -17,3 +17,8 @@ results/*
 
 # Wang-derived fixtures: generated locally (dataset redistribution terms unstated)
 fixtures/wang/
+
+# Local assistant/editor notes: not part of the shared repo
+CLAUDE.md
+CLAUDE.local.md
+.claude/

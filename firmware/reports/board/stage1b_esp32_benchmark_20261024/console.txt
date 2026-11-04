@@ -57,4 +57,4 @@ board ready (config benchmark_v1); 54 trials, window [160, 785) + every hop poin
 accuracy  python 96.3%  esp32 96.3%  (54 trials, chance 33.3%)
 same winner on 54/54 trials; max score error 4.4e-05 (benchmark window, 0 missing), 5.3e-05 (all 432 hop points, 0 failed)
 on-chip decision time: avg 4.46 ms, max 4.71 ms (filter + 3 CCA)
-PASS; results /Users/atharvk/Desktop/Claude projects/Synapsys/synapsys-decoder/results/20261024-194510_esp32_benchmark
+PASS; results <repo>/results/20261024-194510_esp32_benchmark

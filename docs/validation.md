@@ -2,11 +2,11 @@
 
 What has been validated, how, and what remains. Evidence levels are kept separate: unit tests (code does what the docs say), synthetic validation (pipeline behaves sensibly), public benchmark (generic CCA works on real EEG), own-hardware validation (the only evidence that counts toward the SynapSys requirements).
 
-Requirements (from `CLAUDE.md`): >= 85 % held-out own-system accuracy, <= 5 s end-to-end latency. Neither is evaluated yet.
+Requirements (project spec): >= 85 % held-out own-system accuracy, <= 5 s end-to-end latency. Neither is evaluated yet.
 
 ## 1. Unit tests
 
-`.venv/bin/pytest -q`: 190 passed, 1 skipped (the real-data benchmark test, skipped when `data/benchmark/` is absent). One test file per module:
+`.venv/bin/pytest -q`: 272 tests (the real-data benchmark tests skip when `data/benchmark/` is absent). One test file per module:
 
 | File | What is covered |
 |---|---|

@@ -170,6 +170,8 @@ renderer measures the real refresh rate at start-up and warns if it is not 60 Hz
 
 ![Stage app: the board decoded YES](live_demo/docs/screenshots/stage_yes.png)
 
+![iPhone app: ready, YES, NO, HELP](live_demo/docs/screenshots/phone_ui_sheet.png)
+
 The laptop plays a real EEG recording (Wang dataset) of someone looking at a tile into the
 ESP32-S3 over USB, in real time (250 samples/s). The **board** filters and decodes it and
 sends the command to an iPhone app, which turns green / red / orange and speaks the word.

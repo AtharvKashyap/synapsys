@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synapsys-stimulus"
+version = "0.1.0"
+description = "Frame-locked SSVEP stimulus renderer for the SynapSys BCI."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "psychopy>=2025.1,<2027",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<10",
+    "ruff>=0.9,<1",
+]
+
+[project.scripts]
+synapsys-stimulus = "synapsys_stimulus.renderer:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

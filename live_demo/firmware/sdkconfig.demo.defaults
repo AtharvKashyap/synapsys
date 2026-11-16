@@ -1,0 +1,38 @@
+# Live demo overlay (layered on firmware/esp32/sdkconfig.defaults). Demo only.
+# Host feed over the COM (UART bridge) port at 921600 baud + BLE on + Wang benchmark config
+# + a demo-only confidence gate so off-target trials stay quiet.
+# T = 0.42 comes from live_demo/analysis/quiet_threshold.py (Wang S1-S3, blocks 0-2);
+# it is NOT a SynapSys threshold and never goes into configs/.
+
+CONFIG_SYNAPSYS_INPUT_HOST=y
+CONFIG_SYNAPSYS_CONFIG_BENCHMARK=y
+
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_SYNAPSYS_BLE_ENABLE=y
+CONFIG_SYNAPSYS_BLE_NAME="SynapSys"
+CONFIG_SYNAPSYS_BLE_DEBUG=y
+
+CONFIG_SYNAPSYS_CONF_THRESHOLD_EN=y
+CONFIG_SYNAPSYS_CONF_THRESHOLD="0.42"
+CONFIG_SYNAPSYS_MARGIN_THRESHOLD_EN=n
+
+CONFIG_SYNAPSYS_PRINT_DECISIONS=y
+CONFIG_SYNAPSYS_RAW_STREAM=n
+
+# Console + host feed on the COM connector. 921600 baud: real-time host feed needs ~25 kB/s.
+# (The baud rate is only settable with a "custom" UART console: UART0 on its default
+# ESP32-S3 pins TX 43 / RX 44, the ones wired to the COM bridge chip.)
+CONFIG_ESP_CONSOLE_UART_CUSTOM=y
+CONFIG_ESP_CONSOLE_UART_CUSTOM_NUM_0=y
+CONFIG_ESP_CONSOLE_UART_TX_GPIO=43
+CONFIG_ESP_CONSOLE_UART_RX_GPIO=44
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=921600
+
+# Lower peak current: some boards brown out on a weak USB supply when the radio calibrates
+# (resets with the saved PC in rtc_brownout_isr_handler). 0 dBm still covers a stage;
+# 160 MHz still decodes in well under the 500 ms hop.
+CONFIG_BT_CTRL_DFT_TX_POWER_LEVEL_P9=n
+CONFIG_BT_CTRL_DFT_TX_POWER_LEVEL_N0=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=n
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y

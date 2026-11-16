@@ -1,0 +1,63 @@
+{
+  "note": "Demo-only thresholds from the public Wang benchmark; not SynapSys thresholds.",
+  "rule": "max target_correct - offtarget_command on blocks 0-2; ties -> smaller T, M",
+  "confidence_threshold": 0.42,
+  "margin_threshold": 0.0,
+  "rearm": {
+    "K": 2,
+    "R": 625,
+    "N": 2
+  },
+  "calibration_blocks_0_2": {
+    "target_correct": 0.9629629629629629,
+    "target_n": 27,
+    "offtarget_command": 0.024305555555555556,
+    "offtarget_n": 288
+  },
+  "demo_blocks_3_5": {
+    "target_correct": 1.0,
+    "target_n": 27,
+    "offtarget_command": 0.052083333333333336,
+    "offtarget_n": 288
+  },
+  "demo_blocks_3_5_ungated": {
+    "target_correct": 0.9629629629629629,
+    "target_n": 27,
+    "offtarget_command": 0.9965277777777778,
+    "offtarget_n": 288
+  },
+  "demo_blocks_quiet_rate_by_frequency": {
+    "8.4": 0.8888888888888888,
+    "8.6": 1.0,
+    "8.8": 0.8888888888888888,
+    "9.0": 1.0,
+    "9.2": 1.0,
+    "9.4": 1.0,
+    "9.6": 1.0,
+    "9.8": 0.8888888888888888,
+    "10.0": 1.0,
+    "10.2": 1.0,
+    "10.4": 0.8888888888888888,
+    "10.6": 1.0,
+    "10.8": 0.7777777777777778,
+    "11.0": 1.0,
+    "11.2": 1.0,
+    "11.4": 1.0,
+    "11.6": 1.0,
+    "12.4": 1.0,
+    "12.6": 1.0,
+    "12.8": 0.8888888888888888,
+    "13.0": 0.8888888888888888,
+    "13.2": 0.7777777777777778,
+    "13.4": 0.8888888888888888,
+    "13.6": 1.0,
+    "13.8": 1.0,
+    "14.0": 1.0,
+    "14.2": 1.0,
+    "14.4": 1.0,
+    "14.6": 1.0,
+    "15.4": 1.0,
+    "15.6": 0.7777777777777778,
+    "15.8": 0.7777777777777778
+  }
+}

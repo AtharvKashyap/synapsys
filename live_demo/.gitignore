@@ -1,0 +1,8 @@
+build/
+__pycache__/
+*.pyc
+ios/**/xcuserdata/
+ios/DerivedData/
+
+# Internal implementation plan: kept locally, not shared
+PLAN.md

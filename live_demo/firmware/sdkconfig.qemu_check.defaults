@@ -1,0 +1,4 @@
+# Emulator check only (not for the board): the demo overlay minus BLE, because QEMU has no
+# radio. Layer after sdkconfig.demo.defaults. Used by firmware/qemu_check.sh.
+CONFIG_BT_ENABLED=n
+CONFIG_SYNAPSYS_BLE_ENABLE=n

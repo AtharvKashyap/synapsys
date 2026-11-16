@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.synapsys.livedemo.blerelay</string>
+	<key>CFBundleName</key>
+	<string>SynapSys BLE relay</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Forwards the ESP32-S3's decisions to the SynapSys iPhone app over Bluetooth.</string>
+</dict>
+</plist>

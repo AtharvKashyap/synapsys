@@ -1,0 +1,9 @@
+# Bluetooth-off demo, for a board whose supply browns out when the radio starts (YD-ESP32-S3
+# unit, 2026-11-08: Espressif's stock bleprph example reboot-loops there too). Layered after
+# sdkconfig.demo.defaults: COM host feed + on-chip decode stay; the phone gets nothing.
+#   NO_BT=1 firmware/build_flash.sh /dev/cu.usbmodemXXXX
+CONFIG_BT_ENABLED=n
+CONFIG_SYNAPSYS_BLE_ENABLE=n
+# No radio, so no reason to save power: full speed (the board parses input byte by byte).
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=n
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y

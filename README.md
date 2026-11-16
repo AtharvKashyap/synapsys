@@ -38,7 +38,7 @@ iPhone app.
    - [E. The firmware without a board](#e-the-firmware-without-a-board)
 5. [Folder structure](#folder-structure)
 6. [Results so far](#results-so-far)
-7. [Rules for contributors](#rules-for-contributors)
+7. [Data Source](#data-source)
 
 ---
 

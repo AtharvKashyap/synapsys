@@ -330,23 +330,6 @@ untested on our own hardware. Details: [docs/validation.md](docs/validation.md).
 
 ---
 
-## Rules for contributors
-
-These keep results honest and the firmware in sync with Python.
-
-- **Python is the reference.** `tests/test_frozen_reference.py` pins its behaviour. Changing
-  the algorithm means a deliberate version 2 with new fixtures and a new C++ check
-  ([docs/reference_v1.md](docs/reference_v1.md)). Never change the algorithm and the
-  language at the same time.
-- **EEG arrays** are `(channels, samples)`, float64, in **volts**. Select channels by name.
-- **Constants live in `configs/`**, never in the algorithm code. Quote YAML labels
-  (`"YES"`, `"NO"`): bare YES/NO are read as true/false.
-- **Thresholds** stay `null` until chosen on our own *calibration* recordings. Never tune on
-  test data, synthetic data or the Wang dataset.
-- **The ESP32 filters causally** (`mode: causal`). `zero_phase` is for offline analysis only.
-- **Serial line formats** are shared by the firmware and the Python tools: change both together.
-- **Raw EEG never goes in git.**
-
 ## Data source
 
 Wang Y., Chen X., Gao X., Gao S., "A Benchmark Dataset for SSVEP-Based Brain–Computer
